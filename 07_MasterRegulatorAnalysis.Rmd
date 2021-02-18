@@ -1,0 +1,124 @@
+---
+title: "9_MasterRegulatorAnalysis"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+### Data loading
+
+```{r, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)
+  library(SEtools)
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+  library(viper)
+})
+source("Functions/EDC_Functions.R")
+source("Functions/CriFormatted.R")
+load("Data/AllSEcorrected.RData",verbose=T)
+load("Data/regulon_weighted.RData", verbose = T)
+```
+
+## psychencode network
+
+### Fetal chronic
+
+```{r}
+se <- SEs$chronic.fetal
+se <- SEtools::log2FC(se, "corrected", controls=se$EXPO=="CNT", isLog = TRUE)
+ag <- readRDS("Data/psychencode_reduced.rds")
+ag <- ag[which(ag[,1] %in% row.names(se) & ag[,2] %in% row.names(se)),]
+write.table( ag, file="Data/psychencode_reduced.txt", col.names=F, row.names=F, sep="\t", quote=F)
+```
+
+```{r}
+tf1.ch <- TFA(se, DEAs$chronic.fetal, ~EXPO, "Data/psychencode_reduced.txt",
+              testCoef=c("EXPO1X","EXPO1000X"), assayName="corrected")
+tf1.ch <- SEtools::log2FC(tf1.ch, "viper", tf1.ch$EXPO=="CNT", isLog=TRUE)
+plotTFA(tf1.ch)
+```
+
+We restrict ourselves to transcription factors whose expression pattern is coherent with their differential activity:
+```{r, fig.width=10, fig.height=6}
+rd <- rowData(tf1.ch)
+sig <- row.names(rd)[(sign(rd$activity.max.logFC)==sign(rd$expression.logFC) & rd$activity.FDR<0.05 & rd$expression.FDR<0.1)]
+sef <- se
+m <- mergeSEs(list(expression=se,activity=tf1.ch), do.scale = FALSE)
+m$assay <- m$Dataset
+sehm(m[,which(m$EXPO %in% c("CNT","1X","1000X"))], sig, do.scale = FALSE, assayName = "log2FC", anno_columns = c("EXPO2","assay"), breaks = 0.99, main="Expression and activity of significant TFs")
+FetTF <- sig
+```
+
+
+### Organoids chronic
+
+```{r}
+se <- SEs$chronic.org
+se <- SEtools::log2FC(se, "corrected", controls=se$EXPO=="CNT", isLog = TRUE)
+ag <- readRDS("Data/psychencode_reduced.rds")
+ag <- ag[which(ag[,1] %in% row.names(se) & ag[,2] %in% row.names(se)),]
+write.table( ag, file="Data/psychencode_reduced.txt", col.names=F, row.names=F, sep="\t", quote=F)
+```
+
+```{r}
+to1.ch <- TFA(se, DEAs$chronic.org, ~EXPO, "Data/psychencode_reduced.txt",
+              testCoef=c("EXPO1X","EXPO1000X"), assayName="corrected")
+to1.ch <- SEtools::log2FC(to1.ch, "viper", to1.ch$EXPO=="CNT", isLog=TRUE)
+plotTFA(to1.ch)
+```
+
+We restrict ourselves to transcription factors whose expression pattern is coherent with their differential activity:
+
+```{r, fig.width=10, fig.height=10}
+rd <- rowData(to1.ch)
+sig <- row.names(rd)[(sign(rd$activity.max.logFC)==sign(rd$expression.logFC) & rd$activity.FDR<0.05 & rd$expression.FDR<0.05)]
+m <- mergeSEs(list(expression=se,activity=to1.ch), do.scale = FALSE)
+m$assay <- m$Dataset
+sehm(m[,which(m$EXPO %in% c("CNT","1X","1000X"))], sig, do.scale = FALSE, assayName = "log2FC", anno_columns = c("EXPO2","assay"), breaks = 0.99, main="Expression and activity of significant TFs",show_rownames = T)
+OrgTF <-sig
+TF <- union(OrgTF,FetTF) 
+```
+
+
+### Merge
+
+```{r, fig.width=12, fig.height=3}
+rd <- merge(rowData(to1.ch), rowData(tf1.ch), by="row.names", suffixes=c("organoid","fetal"))
+sig <- rd$Row.names[which(
+  apply(sign(as.matrix(rd[,grep("logFC",colnames(rd))])),1,FUN=function(x) length(unique(x))==1) &
+  rd$activity.FDRorganoid < 0.1 & rd$activity.FDRfetal < 0.2 &
+    rd$expression.FDRorganoid < 0.25 & rd$expression.FDRfetal < 0.25
+)]
+m <- mergeSEs(list(exp.org=se,activity.org=to1.ch,exp.fetal=sef, activity.fetal=tf1.ch), do.scale = FALSE)
+m$assay <- c("expression","activity")[1+as.numeric(grepl("activity",m$Dataset))]
+m$system <- c("fetal","organoid")[1+as.numeric(grepl("org",m$Dataset))]
+sehm(m[,which(m$EXPO %in% c("CNT","1X","1000X"))], sig, do.scale = FALSE, assayName = "log2FC", anno_columns = c("EXPO2","assay","system"), breaks = 0.99, main="Expression and activity of significant TFs in both fetal and organoids", sortRowsOn = NULL)
+TFshort<-sig
+save(OrgTF,FetTF,TF, TFshort, file = "Data/HormonalGenes/HormonalTFs/TF.RData")
+```
+
+
+```{r}
+Org <- to1.ch
+Fet <- tf1.ch
+save(Org, Fet, file="Data/TFA.RData")
+```
+
+
+***
+
+To continue with the results you can go [here](10_HormonalPathways.html)
+
+```{r child='footer.Rmd'}
+```

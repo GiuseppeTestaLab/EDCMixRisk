@@ -1,0 +1,446 @@
+---
+title: "RNASeq Characterization of differential expression results: MixN chronic treatment in fetal neural progenitors"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        theme: 'yeti'
+        highlight: 'tango'
+        code_folding: hide
+params: 
+    Dataset: 'FetalChronic'
+    topTagFile: 'Data/AllSEcorrected.RData'
+    FDRTr: 0.05
+    LogFCTr: 0.5
+    OutputFolder: 'Data/FunctionalAnalysis/FetalChronicMixN/'
+    GOSeq: 'Yes'
+    TopGO: 'Yes'
+    Camera: 'Yes'
+    Gsea: 'Yes'
+    GseaPvalSel: 0.05
+     
+---
+
+
+### 1. Environment Set Up
+
+#### 1.1 Parameters
+
+```{r EnvironmentSetupI, collapse=TRUE}
+for (i in 1:length(params))
+  print(paste('Parameter:', names(params)[i], ' - Value:', params[[i]], '- Class:', class(params[[i]])))
+```
+
+```{r FolderSetting}
+Dataset <- params$Dataset
+LogFCTh <- params$LogFCTr
+FDRTh <- params$FDRTr
+OutputFolder <- ifelse(is.null(params$OutputFolder), getwd(), params$OutputFolder) 
+
+if (dir.exists(OutputFolder) == FALSE) {
+  dir.create(OutputFolder, recursive=FALSE)
+}
+
+if (dir.exists(paste0(OutputFolder, 'TopGO')) == FALSE) {
+  dir.create(paste0(OutputFolder, 'TopGO'), recursive=FALSE)
+}
+
+if (dir.exists(paste0(OutputFolder, 'Gsea')) == FALSE) {
+  dir.create(paste0(OutputFolder, 'Gsea'), recursive=FALSE)
+}
+
+```
+
+#### 1.2 Libraries and functions
+
+```{r EnvironmentSetupII, collapse=TRUE}
+library(stringr)
+library(DT)
+library(ggplot2)
+library(ggrepel)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(gridExtra)
+library(RColorBrewer)
+library(topGO)
+library(fgsea)
+library(tidyr)
+library(dplyr)
+```
+
+```{r EnvironmentSetupIII}
+options(stringsAsFactors=FALSE)
+```
+
+
+```{r SourceFile, collapse=TRUE}
+source('Functions/EDC_Functions.R')
+source('Functions/CriFormatted.R')
+source('Functions/goseq.R')
+```
+
+#### 1.3 Gene sets
+
+ * Molecular Signature Database: H1 (hallmark gene sets); KEGG gene sets
+ * ASD-related: list containing most relevant ASD or NDD-related genes
+ * Metabolism-related
+
+  
+```{r GeneSets, collapse=TRUE}
+H1 <- gmtPathways('Data/MolecularSignatureDatabase/H/h.all.v7.0.symbols.gmt')
+Kegg <- gmtPathways('Data/MolecularSignatureDatabase/C2/KEGG/c2.cp.kegg.v7.0.symbols.gmt')
+
+load('Data/ASD.RData', verbose=TRUE)
+# remove not useful ones. I keep the gene sets in ASD list
+rm(SFARI, SFARIgenes, AutismKB, DecipherNeuro, 
+   MSSNG, ASDsevere, ID, NeuroOmim, iPSYCH, GDI)
+
+load('Data/MetabGenes.RData', verbose=TRUE)
+MetabGeneSet <- metabolism
+```
+
+
+****
+
+### 2. Data Upload: differential expression results
+
+I upload the result if differential expression analysis after SVA correction.
+__I select DEGs as having an FDR < 0.05 (anova-like FDR) and a log2FC > 0.5 either in Mix 1X or Mix 1000X__. I also calculate the mean fold-change in the two treatments. 
+
+```{r Data, collapse=TRUE}
+load(params$topTagFile, verbose=TRUE)
+
+Res <- list()
+Res$tableRaw <- DEAs$chronic.fetal
+Res$table <- DEAs$chronic.fetal
+Res$table$genes <- row.names(Res$table)
+Res$table$logFC <- (Res$table$logFC.EXPO1X + Res$table$logFC.EXPO1000X)/2
+Res$table$GeneName <- row.names(Res$table) # I generated this column to make the dataframe compatible with some functions
+Res$degs <- dplyr::filter(Res$table, FDR < FDRTh & (abs(logFC.EXPO1X) > LogFCTh | abs(logFC.EXPO1000X) > LogFCTh) & logCPM >0)
+dim(Res$degs) 
+```
+
+
+__`r dim(Res$table)[1]`__ genes have been testes for differential expression. 
+
+Imposing a threshold of `r 2^LogFCTh` on the FC and `r FDRTh` on the FDR (as specified in parameters), __`r dim(dplyr::filter(Res$table, FDR < FDRTh & (abs(logFC.EXPO1X) > LogFCTh | abs(logFC.EXPO1000X) > LogFCTh) & logCPM >0))[1]`__ genes are selected. 
+ 
+
+****
+
+### 3. RESULTS NAVIGATION: Interactive Table
+
+
+From topTag I generate an interactive table for result interrogation with link to the Gene Cards. __The table reports all the genes having a FDR < `r FDRTh`   and a Log2FC > `r LogFCTh`__ for at least one of the two treatments as absolute value, according to the threshold settings. 
+
+
+```{r InteractiveTableReg, collapse=TRUE}
+searchURL <- 'https://www.genecards.org/cgi-bin/carddisp.pl?gene='
+# First part of the URL that will be used to generate the link
+
+Res$table %>% 
+  dplyr::filter(FDR < FDRTh & (abs(logFC.EXPO1X)>LogFCTh | abs(logFC.EXPO1000X)>LogFCTh) & logCPM >0) %>%
+  dplyr::mutate(GeneLink=paste0('<a href="', searchURL, genes, '">', genes, '</a>')) %>% 
+  # generation of the link
+  dplyr::select(9, 10, 8, 1:2, 6) %>% # selection of columns to be shown
+  DT::datatable(class = 'hover', rownames=FALSE, caption='Differential expression results', filter='top', 
+            extensions='Buttons', options = list(pageLength=10, autoWidth=TRUE, dom='Bfrtip', 
+                                                 buttons=c('csv', 'excel')), escape=FALSE) %>%
+  formatRound(c(3:6), c(rep(2,3), 4))
+```
+
+
+
+****
+
+### 4. TOPGO for Gene Ontology Enrichment analysis
+
+Gene ontology enrichment analysis is performed on the set of `r dim(dplyr::filter(Res$table, FDR < FDRTh & abs(logFC) > LogFCTh & logCPM >0))[1]` genes using TopGO with Fisher statistics and weight01 algorithm. The division between up-regulated and down-regulated genes is done on the mean FC between the two treatments. 
+
+#### 4.1 Selection of modulated genes and generation of gene vectors
+
+I generate vectors for the gene universe, all modulated genes, up-regulated genes and down-regulated genes in the format required by TopGO.
+
+
+```{r TopGOSetI, collapse=TRUE}
+UniverseGenes <- Res$table %>% dplyr::pull(GeneName)
+DEG <- Res$degs %>% dplyr::pull(GeneName)
+DEGUp <- Res$degs %>% dplyr::filter(logFC > 0) %>% dplyr::pull(GeneName) 
+DEGDown <- Res$degs %>% dplyr::filter(logFC < 0) %>% dplyr::pull(GeneName) 
+  
+# generation of named vectors in the format required by TopGO
+GeneVectors <- list()
+GeneVectors$DEGenes <- factor(as.integer(UniverseGenes%in%DEG))
+names(GeneVectors$DEGenes) <- UniverseGenes
+GeneVectors$DEGenesDown <- factor(as.integer(UniverseGenes%in%DEGDown))
+names(GeneVectors$DEGenesDown) <- UniverseGenes
+GeneVectors$DEGenesUp <- factor(as.integer(UniverseGenes%in%DEGUp))
+names(GeneVectors$DEGenesUp) <- UniverseGenes
+```
+
+
+Therefore: 
+
+ * universe genes: __`r length(GeneVectors$DEGenes)`__ genes
+ * modulated genes: __`r table(GeneVectors$DEGenes)['1']`__ genes
+ * down-regulated genes:  __`r table(GeneVectors$DEGenesDown)['1']`__  genes of interest
+ * up-regulated genes:  __`r table(GeneVectors$DEGenesUp)['1']`__ genes of interest  
+
+
+```{r TopGOSetII, collapse=TRUE}
+BpEval <- ifelse(params$TopGO=='Yes', TRUE, FALSE)
+# the analysis is not done if the number of DEGs (all, down-reg or up-reg) is lower than 2.
+BpEval <- ifelse(table(GeneVectors$DEGenes)['1'] < 2 | is.na(table(GeneVectors$DEGenes)['1']) | table(GeneVectors$DEGenesDown)['1'] < 2 | is.na(table(GeneVectors$DEGenesDown)['1']) | table(GeneVectors$DEGenesUp)['1'] < 2 | is.na(table(GeneVectors$DEGenesUp)['1']), FALSE, BpEval)
+```
+
+On the basis of the analysis settings or the number of differentially expressed genes, TopGO analysis __`r ifelse(BpEval==TRUE, 'IS', 'IS NOT')` performed__.
+
+
+#### 4.2 Biological Process for ALL modulated: `r length(GeneVectors$DEGenes[GeneVectors$DEGenes==1])` genes
+
+
+```{r BPAll, eval=BpEval, collapse=TRUE}
+# I generate a list that contains the association between each gene and the GO terms that are associated to it
+BPann <- topGO::annFUN.org(whichOnto="BP", feasibleGenes=names(GeneVectors$DEGenes), mapping="org.Hs.eg.db", ID="symbol") %>% inverseList()
+
+# Wrapper function for topGO analysis (see helper file)
+ResBPAll <- topGOResults(Genes=GeneVectors$DEGenes, gene2GO=BPann, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+write.table(ResBPAll$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResults.txt'), sep='\t', row.names=FALSE)
+```
+
+#### 4.3 Biological Process Analysis for DOWN-REGULATED: `r length(GeneVectors$DEGenesDown[GeneVectors$DEGenesDown==1])` genes
+
+```{r BPDown, eval=BpEval, collapse=TRUE}
+# Wrapper function for topGO analysis (see helper file)
+ResBPDown <- topGOResults(Genes=GeneVectors$DEGenesDown, gene2GO=BPann, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+# Selection on enrichment of at least 2 is implemented (also to avoid depleted categories). Then categories are ranked by PVal and all the ones with Pval < th are selected. If the number is < minTerms, othter terms are included to reach the minimum number. 
+
+# Results are shown in an interactive table
+searchURL <- 'http://amigo.geneontology.org/amigo/term/'
+
+ResBPDown$ResSel %>% 
+  dplyr::mutate(GOLink=paste0('<a href="', searchURL, GO.ID, '">', GO.ID, '</a>')) %>% 
+  dplyr::select(8, 2, 4, 5, 7, 6) %>% # selection of columns to be shown
+  dplyr::filter(as.numeric(Statistics) < 0.01) %>% # only significant terms are shown in the table
+  DT::datatable(class = 'hover', rownames = FALSE, caption='Down-regulated genes: Biological Process Gene Ontology Enrichment',  filter='top', options = list(pageLength = 5, autoWidth = TRUE), escape=FALSE)
+```
+
+#### 4.4 Biological Process Analysis for UP-REGULATED: `r length(GeneVectors$DEGenesUp[GeneVectors$DEGenesUp==1])` genes
+
+```{r BPUp, eval=BpEval, collapse=TRUE}
+# Wrapper function for topGO analysis (see helper file)
+ResBPUp <- topGOResults(Genes=GeneVectors$DEGenesUp, gene2GO=BPann, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01,  minTerms=10)
+
+ResBPUp$ResSel %>% 
+  dplyr::mutate(GOLink=paste0('<a href="', searchURL, GO.ID, '">', GO.ID, '</a>')) %>% 
+  dplyr::select(8, 2, 4, 5, 7, 6) %>% # selection of columns to be shown
+  dplyr::filter(as.numeric(Statistics) < 0.01) %>% # only significant terms are shown in the table
+  DT::datatable(class = 'hover', rownames = FALSE, caption='Up-regulated genes: Biological Process Gene Ontology Enrichment',  filter='top', options = list(pageLength = 5, autoWidth = TRUE), escape=FALSE)
+```
+
+#### 4.5 Result visualization: Barplot
+
+```{r BPBarplot, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
+# the if clauses avoids an error in case there is one empty category
+if(dim(ResBPUp$ResSel)[1] > 0 & dim(ResBPDown$ResSel)[1] > 0 & dim(ResBPAll$ResSel)[1] > 0){
+
+TopGOBar <- topGOBarplotAll(TopGOResAll=ResBPAll$ResSel, TopGOResDown=ResBPDown$ResSel, TopGOResUp=ResBPUp$ResSel, terms=8, pvalTh=0.01, title=NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/Barplot.pdf'), TopGOBar, 
+       width=13, height=8)
+  }
+```
+
+
+### 5. GOSeq for Gene Ontology Enrichment analysis
+
+```{r GOSeqSet, collapse=TRUE}
+GOSeqEval <- ifelse(params$GOSeq=='Yes', TRUE, FALSE)
+```
+
+Gene ontology enrichment analysis is performed on the set of `r dim(dplyr::filter(Res$table, FDR < FDRTh & abs(logFC) > LogFCTh & logCPM >0))[1]` genes using GOSeq approach. On the basis of the analysis settings, GOSeq analysis __`r ifelse(GOSeqEval==TRUE, 'IS', 'IS NOT')` performed__.
+
+```{r GOSeq, eval=GOSeqEval, collapse=TRUE, fig.width=5, fig.height=5}
+GOSeq <- goseq.enrichment(names(GeneVectors$DEGenes), names(GeneVectors$DEGenes)[GeneVectors$DEGenes==1], "GO:BP", cutoff=0.05)
+#colnames(GOSeq) <- c("GO.ID", "Term", "Annotated", "Significant", "enrichment", "PValue", "FDR", "genes")
+if(dim(GOSeq)[1] > 0) {
+gotr <- goTreemap(GOSeq, removeParents=FALSE)
+} # to avoid errors if no results are found
+```
+
+
+### 6. CAMERA for Gene Set analysis
+
+```{r CameraI, collapse=TRUE}
+CameraEval <- ifelse(params$Camera=='Yes', TRUE, FALSE)
+```
+
+On the basis of the analysis settings, Camera analysis __`r ifelse(CameraEval==TRUE, 'IS', 'IS NOT')` performed__.
+
+
+```{r CameraII, collapse=TRUE, eval=CameraEval}
+printTable <- function(x){
+  x$genes <- NULL
+  datatable(x, filter="top", extensions = 'Buttons', 
+            options = list( dom = 'Bfrtip', buttons = 'csv')
+            )
+}
+
+ResCamera <- Res$table %>% dplyr::mutate(StatSign=F*sign(rowMeans(Res$tableRaw[,grep('logFC\\.',colnames(Res$tableRaw))])))
+row.names(ResCamera) <- ResCamera$genes
+
+printTable(cameraWrapper(dea=ResCamera, gsets=NULL, addSets=c(ASD, MetabGeneSet), addDEgenes=TRUE, dea.thres=0.05, minG=5, reportMax=500))
+#printTable(cameraWrapper(dea=ResCamera, gsets=c(H1, Kegg, ASD, MetabGeneSet), addSets=NULL, addDEgenes=TRUE, dea.thres=0.05, minG=5, reportMax=500))
+```
+
+
+### 7. GSEA for Gene Set Enrichment Analysis
+
+```{r Gsea}
+GseaEval <- ifelse(params$Gsea=='Yes', TRUE, FALSE)
+```
+
+On the basis of the analysis settings, GSEA analysis __`r ifelse(GseaEval==TRUE, 'IS', 'IS NOT')` performed__.
+
+
+#### 7.1 Ranked Lists for GSEA 
+
+__Rank for stat after selecting only genes with PValues < 0.05__. StatSign has been calculated as for camera analysis: F value multiplied for the sign of the mean FC. __N.B. fgsea sort the vector in decreasing order.__
+
+```{r GseaRank, eval=GseaEval, collapse=TRUE}
+FStat <- rankGeneVector(ResCamera, Order='StatSign', PValSel=params$GseaPvalSel)
+length(FStat)
+head(FStat)
+tail(FStat)
+print(paste('Fgsea analysis is performed on', length(FStat), 'genes having PValue <', params$GseaPvalSel, 'and ranked according to signed F statistics'))
+```
+
+
+#### 7.2 GSEA analysis
+
+__fgsea analysis: H1 pathways__
+
+```{r GseaH1, eval=GseaEval, collapse=TRUE, fig.height=5}
+set.seed(42)
+GseaSelH1 <- fgsea(FStat, pathways=H1, nperm=75000, maxSize=500, minSize=10, nproc=1)
+data.table::fwrite(GseaSelH1, file=paste0(OutputFolder, '/Gsea/GseaSelH1.txt'), sep="\t", sep2=c("", " ", ""))
+
+GseaResH1 <- dplyr::filter(GseaSelH1, padj < 0.1 & abs(NES) > 2) %>% 
+  dplyr::mutate(LEGenes=stringr::str_count(leadingEdge, ",")+1) %>% 
+  dplyr::mutate(GeneSet='H1') %>% 
+  dplyr::select(1, 2, 3, 5, 9, 10)
+GseaResH1[,1]
+
+if(dim(GseaResH1)[1] > 0){
+plotGseaTable(H1[GseaResH1 %>% dplyr::arrange(NES) %>% dplyr::pull(pathway)], 
+              FStat, GseaSelH1, gseaParam=0.5)
+}
+```
+
+__fgsea analysis: Kegg pathways__
+
+```{r GseaKegg, eval=GseaEval, collapse=TRUE, fig.height=5}
+set.seed(42)
+GseaSelKegg <- fgsea(FStat, pathways=Kegg, nperm=75000, maxSize=500, minSize=10, nproc=1)
+data.table::fwrite(GseaSelKegg, file=paste0(OutputFolder, '/Gsea/GseaSelKegg.txt'), sep="\t", sep2=c("", " ", ""))
+
+GseaResKegg <- dplyr::filter(GseaSelKegg, padj < 0.1 & abs(NES) > 2) %>% 
+  dplyr::mutate(LEGenes=stringr::str_count(leadingEdge, ",")+1) %>% 
+  dplyr::mutate(GeneSet='Kegg') %>% 
+  dplyr::select(1, 2, 3, 5, 9, 10)
+GseaResKegg[,1]
+
+if(dim(GseaResKegg)[1] > 0){
+plotGseaTable(Kegg[GseaResKegg %>% dplyr::arrange(NES) %>% dplyr::pull(pathway)], 
+              FStat, GseaSelKegg, gseaParam=0.5)
+}
+```
+
+__fgsea analysis: ASD genes__
+
+```{r GseaASD, eval=GseaEval, collapse=TRUE, fig.height=5}
+set.seed(42)
+GseaSelASD <- fgsea(FStat, pathways=ASD, nperm=75000, maxSize=500, minSize=10, nproc=1)
+data.table::fwrite(GseaSelASD, file=paste0(OutputFolder, '/Gsea/GseaSelASD.txt'), sep="\t", sep2=c("", " ", ""))
+
+GseaResASD <- dplyr::filter(GseaSelASD, padj < 0.1 & abs(NES) > 2) %>% 
+  dplyr::mutate(LEGenes=stringr::str_count(leadingEdge, ",")+1) %>% 
+  dplyr::mutate(GeneSet='ASD') %>% 
+  dplyr::select(1, 2, 3, 5, 9, 10)
+GseaResASD[,1]
+
+if(dim(GseaResASD)[1] > 0){
+plotGseaTable(ASD[GseaResASD %>% dplyr::arrange(NES) %>% dplyr::pull(pathway)], 
+              FStat, GseaSelASD, gseaParam=0.5)
+}
+```
+
+__fgsea analysis: metabolism-related gene sets __
+
+```{r GseaCellTypes, eval=GseaEval, collapse=TRUE, fig.height=5}
+set.seed(42)
+GseaSelMet <- fgsea(FStat, pathways=MetabGeneSet, nperm=75000, maxSize=500, minSize=10, nproc=1)
+data.table::fwrite(GseaSelMet, file=paste0(OutputFolder, '/Gsea/GseaSelMet.txt'), sep="\t", sep2=c("", " ", ""))
+
+GseaResMet <- dplyr::filter(GseaSelMet, padj < 0.1 & abs(NES) > 2) %>% 
+  dplyr::mutate(LEGenes=stringr::str_count(leadingEdge, ",")+1) %>% 
+  dplyr::mutate(GeneSet='Metabolism') %>% 
+  dplyr::select(1, 2, 3, 5, 9, 10)
+GseaResMet[,1]
+
+if(dim(GseaResMet)[1] > 0){
+plotGseaTable(CellTypes[GseaResMet %>% dplyr::arrange(NES) %>% dplyr::pull(pathway)], 
+              FSat, GseaSelCells, gseaParam=0.5)
+}
+```
+
+
+
+
+#### 7.3 GSEA results visualization
+
+```{r}
+GseaRes <- rbind(GseaResH1, GseaResKegg, GseaResMet, GseaResASD)
+Cols <- c(H1='#e76bf3', Kegg="#39b600", Metabolism="#e58700", ASD='#00b0f6')
+
+BubbleGsea <- ggplot(GseaRes, aes(x=NES, y=-log10(padj), fill=GeneSet, size=LEGenes)) +
+  geom_point(alpha=0.65, shape=21, color='black') + 
+  #geom_text_repel(label=GseaRes$pathway, cex=1.8, 
+                  #segment.color="grey50", segment.size=0.3,
+                  #force=20, nudge_y=-0.15) +
+  geom_vline(xintercept = 0, col='blue') +
+  xlab('NES') + ylab('-log10 Adjusted PVal') +
+  scale_fill_manual(values=Cols) +
+  scale_size(range=c(3,15), name='Leading Edge \n Genes') +
+  theme_bw()
+BubbleGsea
+
+BubbleGsea <- ggplot(GseaRes, aes(x=NES, y=-log10(padj), fill=GeneSet, size=LEGenes)) +
+  geom_point(alpha=0.65, shape=21, color='black') + 
+  geom_text_repel(label=GseaRes$pathway, cex=1.8, 
+                  segment.color="grey50", segment.size=0.3,
+                  force=20, nudge_y=-0.15) +
+  geom_vline(xintercept = 0, col='blue') +
+  xlab('NES') + ylab('-log10 Adjusted PVal') +
+  scale_fill_manual(values=Cols) +
+  scale_size(range=c(3,15), name='Leading Edge \n Genes') +
+  theme_bw()
+BubbleGsea
+
+
+ggsave(filename=paste0(OutputFolder, '/Gsea/Bubble.pdf'), BubbleGsea, 
+       width=6.5, height=5.5)
+```
+
+
+***
+
+```{r child='footer.Rmd'}
+```
+
+
+```{r SaveSession}
+sessionInfo()
+```

@@ -1,0 +1,18 @@
+T3_ORG3.tif
+DAPI low thresh:275
+KI67 low thresh:694
+Area KI67:882529.511
+Area DAPI:2658027.93
+Area ratio KI67/DAPI:0.332
+T3_ORG1.tif
+DAPI low thresh:237
+KI67 low thresh:1032
+Area KI67:402131.713
+Area DAPI:1115341.09
+Area ratio KI67/DAPI:0.3605
+T3_ORG2.tif
+DAPI low thresh:441
+KI67 low thresh:1209
+Area KI67:550568.236
+Area DAPI:2500420.86
+Area ratio KI67/DAPI:0.2202

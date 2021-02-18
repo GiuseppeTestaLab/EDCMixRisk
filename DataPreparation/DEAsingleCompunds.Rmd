@@ -1,0 +1,112 @@
+---
+title: "DEA single compounds"
+
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+
+```{r}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)  
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+})
+load("../Data/geneLengths.RData")
+source("../Functions/EDC_Functions.R")
+load("../Data/TotalSumExp.RData",verbose=T)
+```
+
+## Chronic expo
+
+```{r}
+# subset to chronic data
+se <- Total[,which(Total$EXPOduration %in% c("Chronic 15 days","Chronic50days"))]
+# refactor EXPO to have DMSO as the base factor, and the other levels in a decent order
+se$EXPO <- factor(as.character(se$EXPO),levels=c("DMSO","CNT","1X","1000X","BPA0.04X","T3","VITC"))
+se$EXPO2 <- se$EXPO
+# we will consider CNT and DMSO together; comment out following to use DMSO as baseline
+levels(se$EXPO) <- c("CNT","CNT","1X","1000X","BPA0.04X","T3","VITC")
+# we treat the batch as factor and use 2018 as the base level because it has the most samples
+se$MixtureBatch <- relevel(as.factor(se$MixtureBatch),"2018")
+se <- se[,order(se$type, se$EXPO, se$MixtureBatch)]
+
+# we filter and normalize the two datasets separately:
+org <- filterGenes(se[,which(se$EXPOduration=="Chronic50days")])
+dds.org <- calcNormFactors(DGEList(assay(org)))
+assays(org)$logcpm <- log(cpm(dds.org)+0.1)
+
+fe <- filterGenes(se[,which(se$EXPOduration=="Chronic 15 days")])
+dds.fe <- calcNormFactors(DGEList(assay(fe)))
+assays(fe)$logcpm <- log(cpm(dds.fe)+0.1)
+```
+
+<br/><br/>
+
+
+## Organoids chronic
+
+```{r, fig.height=12, fig.width=12}
+# performs the SVA analysis
+sv <- svacor(org, ~MixtureBatch+EXPO, ~MixtureBatch,regressOutNull = T)
+# we put the corrected data in the total SE object 
+assays(org)$corrected <- sv$cor
+
+# we include the SVs in the object's metadata
+colData(org) <- cbind(colData(org),sv$sv)
+
+#DEA T3
+fit <- glmQLFit(estimateDisp(dds.org,sv$mm),sv$mm)
+
+res.orgT3 <- as.data.frame(topTags(glmQLFTest(fit,c("EXPOT3")),n=Inf))
+degs.orgT3 <- row.names(res.orgT3)[which(abs(res.orgT3$logFC)> 0.5 & res.orgT3$FDR<=0.05 & res.orgT3$logCPM>0)]
+
+res.orgBPA <- as.data.frame(topTags(glmQLFTest(fit,c("EXPOBPA0.04X")),n=Inf))
+degs.orgBPA <- row.names(res.orgBPA)[which(abs(res.orgBPA$logFC)> 0.5 & res.orgBPA$FDR<=0.05 & res.orgBPA$logCPM>0)]
+
+save(res.orgT3,res.orgBPA, file = "../Data/DEAorgSingleCompunds.RData")
+```
+
+
+
+## Fetal chronic
+
+```{r, fig.height=12, fig.width=12}
+# performs the SVA analysis
+sv <- svacor(fe, ~MixtureBatch+EXPO, ~MixtureBatch,regressOutNull = T)
+# we put the corrected data in the total SE object 
+assays(fe)$corrected <- sv$cor
+
+# we include the SVs in the object's metadata
+colData(fe) <- cbind(colData(fe),sv$sv)
+
+#DEA T3
+fit <- glmQLFit(estimateDisp(dds.fe,sv$mm),sv$mm)
+
+res.fetT3 <- as.data.frame(topTags(glmQLFTest(fit,c("EXPOT3")),n=Inf))
+degs.fetT3 <- row.names(res.fetT3)[which(abs(res.fetT3$logFC)> 0.5 & res.fetT3$FDR<=0.05 & res.fetT3$logCPM>0)]
+
+
+res.fetBPA <- as.data.frame(topTags(glmQLFTest(fit,c("EXPOBPA0.04X")),n=Inf))
+degs.fetBPA <- row.names(res.fetBPA)[which(abs(res.fetBPA$logFC)> 0.5 & res.fetBPA$FDR<=0.05 & res.fetBPA$logCPM>0)]
+
+save(res.fetT3,res.fetBPA, file = "../Data/DEAfetSingleCompunds.RData")
+```
+
+
+
+***
+
+
+```{r child='footer.Rmd'}
+```

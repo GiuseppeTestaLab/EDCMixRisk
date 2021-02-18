@@ -1,0 +1,36 @@
+BPA.lif - 40X_ORG1_1
+DAPI low thresh:425
+KI67 low thresh:558
+Area KI67:4310.848
+Area DAPI:61102.6034
+Area ratio KI67/DAPI:0.07055
+BPA.lif - 40X_ORG1_2
+DAPI low thresh:165
+KI67 low thresh:969
+Area KI67:5275.6164
+Area DAPI:61300.2138
+Area ratio KI67/DAPI:0.08606
+BPA.lif - 40X_ORG1_3
+DAPI low thresh:238
+KI67 low thresh:902
+Area KI67:3933.4092
+Area DAPI:80983.1386
+Area ratio KI67/DAPI:0.04857
+BPA.lif - 40X_ORG2_1
+DAPI low thresh:467
+KI67 low thresh:696
+Area KI67:3542.673
+Area DAPI:61836.935
+Area ratio KI67/DAPI:0.05729
+BPA.lif - 40X_ORG3_1
+DAPI low thresh:248
+KI67 low thresh:642
+Area KI67:2422.4288
+Area DAPI:57416.1355
+Area ratio KI67/DAPI:0.04219
+BPA.lif - 40X_ORG4_1
+DAPI low thresh:565
+KI67 low thresh:760
+Area KI67:2190.4797
+Area DAPI:57723.0978
+Area ratio KI67/DAPI:0.03795

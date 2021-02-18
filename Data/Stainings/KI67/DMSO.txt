@@ -1,0 +1,54 @@
+DMSO.lif - 40X_ORG1_1
+DAPI low thresh:346
+KI67 low thresh:1948
+Area KI67:2935.6579
+Area DAPI:77771.0504
+Area ratio KI67/DAPI:0.03775
+DMSO.lif - 40X_ORG1_2
+DAPI low thresh:858
+KI67 low thresh:1878
+Area KI67:2075.5742
+Area DAPI:56246.6907
+Area ratio KI67/DAPI:0.0369
+DMSO.lif - 40X_ORG1_3
+DAPI low thresh:722
+KI67 low thresh:1335
+Area KI67:3080.4435
+Area DAPI:52884.6543
+Area ratio KI67/DAPI:0.05825
+DMSO.lif - 40X_ORG2_1
+DAPI low thresh:495
+KI67 low thresh:2098
+Area KI67:2942.6716
+Area DAPI:77989.7803
+Area ratio KI67/DAPI:0.03773
+DMSO.lif - 40X_ORG2_2
+DAPI low thresh:514
+KI67 low thresh:1846
+Area KI67:5242.7379
+Area DAPI:71078.3439
+Area ratio KI67/DAPI:0.07376
+DMSO.lif - 40X_ORG2_3
+DAPI low thresh:692
+KI67 low thresh:2149
+Area KI67:1220.1054
+Area DAPI:51740.5789
+Area ratio KI67/DAPI:0.02358
+DMSO.lif - 40X_ORG3_1
+DAPI low thresh:822
+KI67 low thresh:1979
+Area KI67:2535.1181
+Area DAPI:57381.7447
+Area ratio KI67/DAPI:0.04418
+DMSO.lif - 40X_ORG3_2
+DAPI low thresh:443
+KI67 low thresh:1996
+Area KI67:3267.077
+Area DAPI:67987.2363
+Area ratio KI67/DAPI:0.04805
+DMSO.lif - 40X_ORG3_3
+DAPI low thresh:525
+KI67 low thresh:1543
+Area KI67:4484.0015
+Area DAPI:68847.0854
+Area ratio KI67/DAPI:0.06513

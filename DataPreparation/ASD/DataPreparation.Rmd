@@ -1,0 +1,116 @@
+---
+date: 'Date: `r format(Sys.Date(), "%B %d, %Y")`'
+
+output:
+    html_document:
+        #toc: true
+        #toc_float: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        #code_folding: hide
+---
+
+
+To go back to the main page go [here](../../NDD.html)
+
+
+## Data preparation
+SFARI genes were downloaded from https://gene.sfari.org/database/gene-scoring/
+
+```{r}
+SFARI <- read.csv("SFARI-Gene_genes_06-20-2019release_07-13-2019export.csv")
+SFARIgenes <- list()
+SFARIgenes$score1 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==1)])
+SFARIgenes$score2 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==2)])
+SFARIgenes$score3 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==3)])
+SFARIgenes$score4 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==4)])
+SFARIgenes$score5 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==5)])
+SFARIgenes$score6 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==6)])
+SFARIgenesAll<- unlist(SFARIgenes)
+```
+
+AutismKB genes were downloaded from http://db.cbi.pku.edu.cn/autismkb_v2/index.php
+```{r}
+AutismKB <- read.table("AutismKB.txt", header = F, sep = "\t")
+colnames(AutismKB) <- c("Gene Symbol",	"Entrez ID",	"Genome-Wide Association Studies",	"CNV/SV Studies",	"Linkage Analyses",	"Low-Scale Genetic Association Studies",	"Expression Profilings",	"NGS de novo Mutation Studies",	"NGS Mosaic Mutation Studies",	"NGS Other Studies",	"Low-Scale Gene Studies",	"total score")
+AutismKBgenes<- as.character(AutismKB$`Gene Symbol`)
+```
+
+Decipher genes were downloaded from https://decipher.sanger.ac.uk/about#downloads/data
+```{r}
+Decipher <- read.csv("DDG2P_16_7_2019.csv")
+DecipherNeuro <- Decipher[c(grep("autism", Decipher$disease.name,ignore.case = T),grep("intellectual", Decipher$disease.name,ignore.case = T),grep("neurodevelopm", Decipher$disease.name, ignore.case = T)),]
+DecipherNeurogenes <- as.character(DecipherNeuro$gene.symbol)
+```
+
+MSSNG genes were downloaded from https://www.ncbi.nlm.nih.gov/pubmed/28263302 Supplementary Table 5
+```{r}
+library(readxl)
+MSSNG <- suppressMessages(read_excel("nn.4524-S7.xlsx"))
+colnames(MSSNG) <- MSSNG[1,]
+MSSNG <- MSSNG[-1,] 
+MSSNGgenes <- as.character(MSSNG$gene_symbol)
+```
+
+ASDsevere genes were downloaded from https://www.nature.com/articles/s41436-018-0380-2 Supplementary Table S6
+```{r}
+ASDsevere <- suppressMessages(read_excel("41436_2018_380_MOESM7_ESM.xlsx"))
+ASDsevereGenes <- as.character(ASDsevere$Gene)
+```
+
+ID genes were downloaded from https://www.nature.com/articles/ng.3792 Supplementary Table S2
+```{r}
+ID <- suppressMessages(read_excel("41588_2017_BFng3792_MOESM20_ESM.xlsx"))
+colnames(ID) <- ID[1,]
+ID <- ID[-1,] 
+IDGenes <- as.character(ID$Gene)
+```
+
+OMIM genes were downloaded from https://www.omim.org/downloads/
+I then select only the genes that are related to neurodevelopmental phenotypes
+```{r}
+morbidmap <- read.table("morbidmap.txt",sep='\t', comment.char='#',fill = T, header = F,quote = "" )
+colnames(morbidmap) <-c("Phenotype",	"Gene Symbols",	"MIM Number",	"Cyto Location")
+
+#run this chunck if you want to check the specific phenopyes selected
+#morbidmap$Phenotype[c(grep("autism", morbidmap$Phenotype,ignore.case = T),grep("intellectual", morbidmap$Phenotype,ignore.case = T),grep("neurodevelopm", morbidmap$Phenotype,ignore.case = T))]
+
+NeuroOmim <- morbidmap[c(grep("autism", morbidmap$Phenotype,ignore.case = T),grep("intellectual", morbidmap$Phenotype,ignore.case = T),grep("neurodevelopm", morbidmap$Phenotype,ignore.case = T)),]
+
+NeuroOmimGenes <- as.character(morbidmap$`Gene Symbols`[c(grep("autism", morbidmap$Phenotype,ignore.case = T),grep("intellectual", morbidmap$Phenotype,ignore.case = T),grep("neurodevelopm", morbidmap$Phenotype,ignore.case = T))])
+NeuroOmimGenes <- strsplit(NeuroOmimGenes,split = ',')
+NeuroOmimGenes <- unique(unlist(NeuroOmimGenes))
+
+OmimGenes <- as.character(morbidmap$`Gene Symbols`)
+OmimGenes <- strsplit(OmimGenes,split = ',')
+OmimGenes <- unique(unlist(OmimGenes))
+```
+
+GDI indexes were downloaded from http://lab.rockefeller.edu/casanova/GDI
+```{r}
+GDI <- read.table("GDI_full_10282015.txt", header = T, sep = "\t")
+```
+
+SingleCellASD genes were downloaded from Supplemntary Data 4 at https://science.sciencemag.org/content/suppl/2019/05/15/364.6441.685.DC1  selecting in particular the clusters of layers 2-3 neurons and protoplasmic astrocytes, to highlight the top cell specific differentially expressed genes, as shown in the paper https://science.sciencemag.org/content/364/6441/685.long
+
+```{r}
+scASDgenes <- read_excel("aav8130_Data-S4.xls")
+SingleCellASDgenes <- as.character(scASDgenes$`Gene name`)
+NeuronASDgenes<-as.character(scASDgenes$`Gene name`)[which(scASDgenes$`Cell type`=="L2/3")]
+AstrocyteASDgenes<-as.character(scASDgenes$`Gene name`)[which(scASDgenes$`Cell type`=="AST-PP")]
+```
+
+iPSYCH consortium is publishing the largest exome sequencing study of autism spectrum disorder (ASD) to date (n=35,584 total samples, 11,986 with ASD). I downloaded the risk genes identified from table S4 of the biorxiv publication at
+https://www.biorxiv.org/content/10.1101/484113v3.supplementary-material
+
+```{r}
+iPSYCH <- read_excel("media-5.xlsx", sheet = 3)
+iPSYCHgenes <- as.character(iPSYCH$gene)
+```
+
+I then save all the objects
+```{r}
+ASD <- list(SFARI=SFARIgenesAll, AutismKB=AutismKBgenes, Decipher=DecipherNeurogenes, MSSNG=MSSNGgenes, iPSYCH=iPSYCHgenes , NeuroOMIM= NeuroOmimGenes, ASDsevere=ASDsevereGenes, ID=IDGenes, SingleCellASD=SingleCellASDgenes, NeuronASD=NeuronASDgenes, AstrocyteASD=AstrocyteASDgenes)
+save(ASD, SFARI, SFARIgenes, AutismKB, DecipherNeuro, MSSNG, ASDsevere, ID, NeuroOmim, iPSYCH, GDI, file = "../../Data/ASD.RData")
+```
+

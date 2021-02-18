@@ -1,0 +1,18 @@
+DMSO_ORG3.tif
+DAPI low thresh:530
+KI67 low thresh:1932
+Area KI67:69745.1129
+Area DAPI:304451.696
+Area ratio KI67/DAPI:0.2291
+DMSO_ORG1.tif
+DAPI low thresh:450
+KI67 low thresh:1687
+Area KI67:151503.725
+Area DAPI:704450.686
+Area ratio KI67/DAPI:0.2151
+DMSO_ORG2.tif
+DAPI low thresh:497
+KI67 low thresh:1373
+Area KI67:38222.0482
+Area DAPI:257322.324
+Area ratio KI67/DAPI:0.1485

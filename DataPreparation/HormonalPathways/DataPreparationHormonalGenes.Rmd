@@ -1,0 +1,316 @@
+---
+title: "Selection of relevant genes for hormonal pathways"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: show
+---
+
+<style>
+  .main-container {
+    max-width: 1200px !important;
+  }
+</style>
+
+### Data loading
+
+```{r}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)  
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+  library(msigdbr)
+  library(readxl)
+  library(SEtools)
+})
+load("../../Data/geneLengths.RData")
+source("../../Functions/EDC_Functions.R")
+source("../../Functions/CriFormatted.R")
+load("../../Data/TotalSumExp.RData",verbose=T)
+load("../../Data/AllSEcorrected.RData",verbose=T)
+```
+
+
+### Hormonal genes DEGs
+```{r, message=FALSE,collapse=TRUE}
+gsets <- getMsigSets()
+Pathways <- as.data.frame(read.csv("FinalTableCompileSignalingPathwaysProject.csv",header = T,sep = ';'))
+ThyroidMouse <- as.data.frame(read.csv("ThryroidMouse.csv",header = T,sep = ';'))
+ThyroidMouse<- as.character(ThyroidMouse$Gene)
+
+#require("biomaRt")
+#human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+#mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+
+library(biomaRt)
+human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+genesV2 = getLDS(attributes = c("mgi_symbol"), filters = "mgi_symbol", values =  ThyroidMouse, mart = mouse, attributesL = c("hgnc_symbol"), martL = human, uniqueRows=T)
+ThyroidHuman <- unique(genesV2[, 2])
+
+
+degs.fe <- row.names(DEAs$chronic.fetal)[which((abs(DEAs$chronic.fetal$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.fetal$logFC.EXPO1000X)>0.5) & DEAs$chronic.fetal$FDR<=0.05 & DEAs$chronic.fetal$logCPM>0)]
+degs.org <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.05 & DEAs$chronic.org$logCPM > 0)]
+
+degs <- union(degs.fe, degs.org)
+
+Thyroid <- gsets[grep("THYROID",names(gsets))]
+Thyroid <- Thyroid[-grep("CANCER",names(Thyroid))]
+Thyroid <- Thyroid[-grep("CARCINOMA",names(Thyroid))]
+Thyroid <- Thyroid[-grep("ADENOMA",names(Thyroid))]
+Thyroid <- Thyroid[-grep("TUMOR",names(Thyroid))]
+Thyroid <- Thyroid[-grep("PARA",names(Thyroid))]
+Thyroid <- Thyroid[-grep("AUTOIMMUNE",names(Thyroid))]
+Thyroid <- union(ThyroidHuman, unlist(Thyroid))
+
+
+ThyroidDEGs <- intersect(Thyroid,degs)
+write.csv(ThyroidDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/ThyroidDEGs.csv")
+
+Androgen <- gsets[grep("ANDROGEN",names(gsets))]
+Androgen <- Androgen[-grep("CANCER",names(Androgen))]
+Androgen2 <- as.character(Pathways$Gene[grep("Androgen",Pathways$Androgen.human.and.mouse)])
+Androgen <- union(Androgen2,(unlist(Androgen)))
+AndrogenDEGs <- intersect(degs, unlist(Androgen))
+write.csv(AndrogenDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/AndrogenDEGs.csv")
+
+Estrogen <- gsets[union(grep("ESTROGEN",names(gsets)),grep("ESTRAD",names(gsets)))]
+Estrogen2 <- as.character(Pathways$Gene[grep("Estrogen",Pathways$Estrogen.human.and.mouse.and.rat)])
+Estrogen <- union(Estrogen2,(unlist(Estrogen)))
+EstrogenDEGs <- intersect(degs, unlist(Estrogen))
+write.csv(EstrogenDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/EstrogenDEGs.csv")
+
+Corticoid <- gsets[grep("CORTICO",names(gsets))]
+Corticoid <- Corticoid[-grep("NFK",names(Corticoid))]
+Corticoid2 <- as.character(Pathways$Gene[grep("Glucocorticoid",Pathways$Glucocorticoid.human.and.mouse.and.rat)])
+Corticoid <- union(Corticoid2,(unlist(Corticoid)))
+CorticoidDEGs <- intersect(degs, unlist(Corticoid))
+write.csv(CorticoidDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/CorticoidDEGs.csv")
+
+PPAR <- gsets[grep("PPAR",names(gsets))]
+PPAR <- PPAR[-grep("PAX8",names(PPAR))]
+PPAR2 <- as.character(Pathways$Gene[grep("Peroxi",Pathways$Peroxisome.proliferator.activated.receptor.human.and.mouse.and.rat)])
+PPAR <- union(PPAR2,(unlist(PPAR)))
+PPARDEGs <- intersect(degs, unlist(PPAR))
+write.csv(PPARDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/PPARDEGs.csv")
+
+Progesterone <- gsets[grep("PROGESTER",names(gsets))]
+Progesterone <- Progesterone[-grep("OOCYTE",names(Progesterone))]
+Progesterone2 <- as.character(Pathways$Gene[grep("Progesterone",Pathways$Progesterone.receptor.human.and.mouse)])
+Progesterone <- union(Progesterone2,(unlist(Progesterone)))
+ProgesteroneDEGs <- intersect(degs, unlist(Progesterone))
+write.csv(ProgesteroneDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/ProgesteroneDEGs.csv")
+
+Retinoic <- gsets[grep("RETINOIC",names(gsets))]
+Retinoic <- Retinoic[-grep("TFA",names(Retinoic))]
+Retinoid <- gsets[grep("RETINOID",names(gsets))]
+Retinoid <- Retinoid[-grep("VISION",names(Retinoid))]
+Retinoic$`C5:MF:GO_RETINOID_X_RECEPTOR_BINDING` <- Retinoid$`C5:MF:GO_RETINOID_X_RECEPTOR_BINDING`
+Retinoic2 <- as.character(Pathways$Gene[grep("Retinoic",Pathways$RA.human.and.mouse)])
+Retinoic <- union(Retinoic2,(unlist(Retinoic)))
+RetinoicDEGs <- intersect(degs, unlist(Retinoic))
+write.csv(RetinoicDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/RetinoicDEGs.csv")
+
+
+save(ThyroidDEGs,AndrogenDEGs,EstrogenDEGs,CorticoidDEGs,ProgesteroneDEGs,PPARDEGs, RetinoicDEGs, file = "../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData")
+
+save(Thyroid,Androgen,Estrogen,Corticoid,Progesterone, PPAR, Retinoic, file = "../../Data/HormonalGenes/HormonalGenes.RData")
+```
+
+
+### Hormonal Genes Psychencode
+```{r, message=FALSE,collapse=TRUE}
+load("../../Data/HormonalGenes/HormonalTFs/TF.RData", verbose = T)
+TF <- union(OrgTF,FetTF)
+
+ThyroidTF <- intersect(Thyroid,TF)
+write.csv(ThyroidTF,file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/Thyroid.csv")
+
+AndrogenTF <- intersect(TF, unlist(Androgen))
+write.csv(AndrogenTF,file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/Androgen.csv")
+
+EstrogenTF <- intersect(TF, unlist(Estrogen))
+write.csv(EstrogenTF,file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/Estrogen.csv")
+
+CorticoidTF <- intersect(TF, unlist(Corticoid))
+write.csv(CorticoidTF,file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/Corticoid.csv")
+
+PPARTF <- intersect(TF, unlist(PPAR))
+write.csv(PPARTF,file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/PPAR.csv")
+
+ProgesteroneTF <- intersect(TF, unlist(Progesterone))
+write.csv(ProgesteroneTF,file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/Progesterone.csv")
+
+RetinoicTF <- intersect(TF, unlist(Retinoic))
+write.csv(RetinoicTF,file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/Retinoic.csv")
+
+save(ThyroidTF,AndrogenTF,EstrogenTF,CorticoidTF,ProgesteroneTF,PPARTF, RetinoicTF, file = "../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData")
+```
+
+
+### Table preparation for Genomatix Network analysis
+```{r, message=FALSE,collapse=TRUE}
+Psy<- union(OrgTF,FetTF)
+load("../../Data/AllSEcorrected.RData", verbose = T)
+uni <-rownames(filterGenes(Total))
+SEs <- list(chronic.org=SEs$chronic.org, chronic.fetal=SEs$chronic.fetal)
+degs.fe <- row.names(DEAs$chronic.fetal)[which((abs(DEAs$chronic.fetal$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.fetal$logFC.EXPO1000X)>0.5) & DEAs$chronic.fetal$FDR<=0.1 & DEAs$chronic.fetal$logCPM>0)]
+degs.org <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.1 & DEAs$chronic.org$logCPM>0)]
+degs <- union(degs.fe, degs.org)
+
+load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)
+Androgen2 <- AndrogenTF
+load("../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData",verbose = T)
+Androgen3 <- AndrogenDEGs
+Hormon <- unique(union(Androgen2,Androgen3))
+Hormon <- data.frame(Gene=Hormon, Pathway="Androgen")
+Hormon$Function <- "None"
+Hormon$Function[which(Hormon$Gene %in% Psy)] <- "PsychencodeTF"
+Hormon$Function[which(Hormon$Gene %in% degs)] <- "DEG"
+Hormon$Function[which(Hormon$Gene %in% intersect(Psy,degs))] <- "PsychencodeTF&DEG"
+Androgen <- Hormon
+
+load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)
+Corticoid2 <- CorticoidTF
+load("../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData",verbose = T)
+Corticoid3 <- CorticoidDEGs
+Hormon <- unique(union(Corticoid2,Corticoid3))
+Hormon <- data.frame(Gene=Hormon, Pathway="Corticoid")
+Hormon$Function <- "None"
+Hormon$Function[which(Hormon$Gene %in% Psy)] <- "PsychencodeTF"
+Hormon$Function[which(Hormon$Gene %in% degs)] <- "DEG"
+Hormon$Function[which(Hormon$Gene %in% intersect(Psy,degs))] <- "PsychencodeTF&DEG"
+Corticoid <- Hormon
+
+load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)
+Estrogen2 <- EstrogenTF
+load("../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData",verbose = T)
+Estrogen3 <- EstrogenDEGs
+Hormon <- unique(union(Estrogen2,Estrogen3))
+Hormon <- data.frame(Gene=Hormon, Pathway="Estrogen")
+Hormon$Function <- "None"
+Hormon$Function[which(Hormon$Gene %in% Psy)] <- "PsychencodeTF"
+Hormon$Function[which(Hormon$Gene %in% degs)] <- "DEG"
+Hormon$Function[which(Hormon$Gene %in% intersect(Psy,degs))] <- "PsychencodeTF&DEG"
+Estrogen <- Hormon
+
+load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)
+PPAR2 <- PPARTF
+load("../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData",verbose = T)
+PPAR3 <- PPARDEGs
+Hormon <- unique( union(PPAR2,PPAR3))
+Hormon <- data.frame(Gene=Hormon, Pathway="PPAR")
+Hormon$Function <- "None"
+Hormon$Function[which(Hormon$Gene %in% Psy)] <- "PsychencodeTF"
+Hormon$Function[which(Hormon$Gene %in% degs)] <- "DEG"
+Hormon$Function[which(Hormon$Gene %in% intersect(Psy,degs))] <- "PsychencodeTF&DEG"
+PPAR <- Hormon
+
+load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)
+Progesterone2 <- ProgesteroneTF
+load("../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData",verbose = T)
+Progesterone3 <- ProgesteroneDEGs
+Hormon <- unique(union(Progesterone2,Progesterone3))
+Hormon <- data.frame(Gene=Hormon, Pathway="Progesterone")
+Hormon$Function <- "None"
+Hormon$Function[which(Hormon$Gene %in% Psy)] <- "PsychencodeTF"
+Hormon$Function[which(Hormon$Gene %in% degs)] <- "DEG"
+Hormon$Function[which(Hormon$Gene %in% intersect(Psy,degs))] <- "PsychencodeTF&DEG"
+Progesterone <- Hormon
+
+load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)
+Thyroid2 <- ThyroidTF
+load("../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData",verbose = T)
+Thyroid3 <- ThyroidDEGs
+Hormon <- unique(union(Thyroid2,Thyroid3))
+Hormon <- data.frame(Gene=Hormon, Pathway="Thyroid")
+Hormon$Function <- "None"
+Hormon$Function[which(Hormon$Gene %in% Psy)] <- "PsychencodeTF"
+Hormon$Function[which(Hormon$Gene %in% degs)] <- "DEG"
+Hormon$Function[which(Hormon$Gene %in% intersect(Psy,degs))] <- "PsychencodeTF&DEG"
+Thyroid <- Hormon
+
+load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)
+Retinoic2 <- RetinoicTF
+load("../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData",verbose = T)
+Retinoic3 <- RetinoicDEGs
+Hormon <- unique(union(Retinoic2,Retinoic3))
+Hormon <- data.frame(Gene=Hormon, Pathway="Retinoic")
+Hormon$Function <- "None"
+Hormon$Function[which(Hormon$Gene %in% Psy)] <- "PsychencodeTF"
+Hormon$Function[which(Hormon$Gene %in% degs)] <- "DEG"
+Hormon$Function[which(Hormon$Gene %in% intersect(Psy,degs))] <- "PsychencodeTF&DEG"
+Retinoic <- Hormon
+
+Hormon <- rbind(Thyroid, Estrogen, Corticoid, Androgen, PPAR, Progesterone, Retinoic)
+write.csv(Hormon, file = "../../Data/HormonalGenes/Genomatix/HormonalGenes.csv")
+```
+
+
+### Table with organoids FC for Genomatix Network -> node size
+
+```{r, message=FALSE,collapse=TRUE}
+Hormon <- read.csv("../../Data/HormonalGenes/Genomatix/HormonalGenes.csv")
+Hormon$X <- NULL
+NodeSize <- as.data.frame(DEAs$chronic.org[intersect(rownames(DEAs$chronic.org),as.character(unique(Hormon$Gene))),which(colnames(DEAs$chronic.org)=="logFC.EXPO1X" | colnames(DEAs$chronic.org)=="logFC.EXPO1000X" | colnames(DEAs$chronic.org)=="FDR")])
+#NodeSizeFetal <- as.data.frame(DEAs$chronic.fetal[intersect(rownames(DEAs$chronic.fetal),as.character(unique(Hormon$Gene))),which(colnames(DEAs$chronic.fetal)=="logFC.EXPO1X" | colnames(DEAs$chronic.fetal)=="logFC.EXPO1000X" | colnames(DEAs$chronic.fetal)=="FDR")])
+write.csv(NodeSize, file = "../../Data/HormonalGenes/Genomatix/NodeSize.csv")
+#write.csv(NodeSizeFetal, file = "Genomatix/TestNodeSizeFetal.csv")
+NodeSize$Gene <- rownames(NodeSize)
+Genomatix <- merge(Hormon, NodeSize,by="Gene")
+length(unique(Genomatix$Gene))
+write.csv(Genomatix, file = "../../Data/HormonalGenes/Genomatix/genomatix.csv")
+
+Genomatix <- Genomatix[which((Genomatix$Function=="DEG"&Genomatix$FDR<0.05)|(Genomatix$Function!="DEG"&Genomatix$FDR<0.05)),]
+length(unique(Genomatix$Gene))
+write.csv(Genomatix, file = "../../Data/HormonalGenes/Genomatix/genomatixFiltered.csv")
+```
+
+### Filtering for NDD genes
+
+```{r, message=FALSE,collapse=TRUE}
+load("../../Data/ASD.RData", verbose = T)
+ASD<- unique(unlist(ASD))
+Genomatix$NDD <- "NO"
+Genomatix$NDD[which(Genomatix$Gene %in% ASD)] <- "YES"
+length(unique(Genomatix$Gene))
+write.csv(Genomatix, file = "../../Data/HormonalGenes/Genomatix/genomatixNDD.csv")
+```
+
+### Reshaping the table
+
+```{r, message=FALSE,collapse=TRUE}
+Genomatix$Thyroid <- "NO"
+Genomatix$Estrogen <- "NO"
+Genomatix$PPAR <- "NO"
+Genomatix$Progesterone <- "NO"
+Genomatix$Androgen <- "NO"
+Genomatix$Retinoic <- "NO"
+Genomatix$Corticoid <- "NO"
+Genomatix2<- Genomatix[-which(duplicated(Genomatix$Gene)),]
+rownames(Genomatix2) <- Genomatix2$Gene
+Genomatix2$Pathway<- NULL
+
+Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="Thyroid")]),"Thyroid"]  <- "Thyroid"
+Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="Estrogen")]),"Estrogen"]  <- "Estrogen"
+Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="PPAR")]),"PPAR"]  <- "PPAR"
+Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="Progesterone")]),"Progesterone"]  <- "Progesterone"
+Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="Androgen")]),"Androgen"]  <- "Androgen"
+Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="Retinoic")]),"Retinoic"]  <- "Retinoic"
+Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="Corticoid")]),"Corticoid"]  <- "Corticoid"
+
+write.csv(Genomatix2, file = "../../Data/HormonalGenes/Genomatix/genomatixHorizontal.csv")
+```
+***
+
+```{r child='footer.Rmd'}
+```
+

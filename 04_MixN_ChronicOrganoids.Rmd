@@ -1,0 +1,174 @@
+---
+title: "5_MixN_ChronicOrganoids"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+### Data loading
+
+```{r, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)
+  library(SEtools)
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+  library(reshape2)
+  library(overlapper)
+})
+source("Functions/EDC_Functions.R")
+source("Functions/CriFormatted.R")
+load("Data/TotalSumExp.RData")
+load("Data/geneLengths.RData")
+load("Data/AllSEcorrected.RData",verbose=T)
+load("Data/brainspan.cortex.byAge.RData", verbose = T)
+load("Data/iPSC.RData", verbose = T)
+```
+
+### Brainspan correlation
+```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+Organoids <- assays(SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT")])$counts
+Fetal2D <- assays(SEs$chronic.fetal[,which(SEs$chronic.fetal$EXPO=="CNT")])$counts
+iPSC <- e[,grep("3391B",colnames(e))]
+Fetal <- byAge
+i <- intersect(rownames(Organoids),intersect(rownames(iPSC),rownames(Fetal2D)))
+tot <- cbind(Organoids[i,],iPSC[i,],Fetal2D[i,])
+
+tot <- filterGenes(tot)
+en <- donorm(tot)
+#put the rows in the same order
+i <- intersect(row.names(Fetal),row.names(en))
+en <- en[i,]
+Fetal <- Fetal[i,]
+#create the matrix of pearson correlation coefficients and plot
+m <- matrix(0,nrow=ncol(Fetal),ncol=ncol(en))
+for(i in 1:ncol(en)){ m[,i] <- apply(Fetal,2,FUN=function(x){ cor(log(en[,i]+1),log(x+1)) }) }
+row.names(m) <- colnames(Fetal)
+colnames(m) <- colnames(en)
+m2 <- m[grep("pcw",row.names(m)),]
+byheatmap(m2,cluster_row=F)
+```
+
+### DEGs heatmaps
+```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+org.chronic <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.05 & DEAs$chronic.org$logCPM > 0)]
+
+save(org.chronic,file = "Data/DEGsOrganoidsChronic.RData")
+
+MixN_org_chronic <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X")]
+
+sehm(MixN_org_chronic, assayName = "corrected", org.chronic,  do.scale = T, show_rownames = F, anno_columns = c("Line","EXPO2"), main="Chronic org DEGs")
+
+```
+
+### Most significant and highly disregulated DEGs heatmaps
+```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+org.chronic2 <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>1 | abs(DEAs$chronic.org$logFC.EXPO1000X)>1) & DEAs$chronic.org$FDR<=0.001 & DEAs$chronic.org$logCPM>0)]
+
+MixN_org_chronic <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X")]
+sehm(MixN_org_chronic, assayName = "corrected", org.chronic2,  do.scale = T, show_rownames = T, anno_columns = c("Line","EXPO2"), main="Chronic org DEGs")
+```
+
+### 1X vs 1000X
+
+```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+FDRTh <- 0.05
+LogFCTh <- 0.5
+
+MixN1X <- DEAs$chronic.org
+MixN1X$genes <- row.names(MixN1X)
+MixN1X$logFC <- (MixN1X$logFC.EXPO1X)
+
+MixN1000X <- DEAs$chronic.org
+MixN1000X$genes <- row.names(MixN1000X)
+MixN1000X$logFC <- (MixN1X$logFC.EXPO1000X)
+
+Comp <- compareResultsFC(MixN1X, MixN1000X, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth = 0, FCceil=8, title='Comparing MixN 1X to 1000X', geneLabel=TRUE)
+
+Comp$Scatter
+```
+
+
+### Neurodevelopmental Disorder (NDD) Genes 
+
+```{r, message=FALSE,collapse=TRUE, fig.height=6}
+load("Data/ASD.RData", verbose = T)
+org.chronic3 <- row.names(DEAs$chronic.org)[which(DEAs$chronic.org$FDR<=0.05)]
+
+MixN <- list(OrganoidsDEGsLong=org.chronic3, OrganoidsDEGs=org.chronic)
+
+
+m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.org))
+dotplot.multintersect(m,sizeRange = c(0,15))
+
+m<-overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.org))
+dotplot.multintersect(m)
+```
+
+### Gene expression dysregulation of the most important NDD genes
+
+```{r, message=FALSE,collapse=TRUE}
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic,SFARIgenes$score1), printExp = FALSE,SampleColors = "Default")
+
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic, union(SFARIgenes$score1,SFARIgenes$score2)), printExp = FALSE,SampleColors = "Default")
+
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic, union(union(SFARIgenes$score1,SFARIgenes$score2),SFARIgenes$score3)), printExp = FALSE,SampleColors = "Default")
+```
+
+### Gene expression dysregulation of the acute fetal DEGs
+
+```{r, message=FALSE,collapse=TRUE}
+load("Data/DEGsFetalAcute.RData", verbose = T)
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic, fet.acute), printExp = FALSE,SampleColors = "Default")
+```
+
+### Gene expression dysregulation of the chronic fetal NDD-DEGs in the organoids
+
+```{r, message=FALSE,collapse=TRUE}
+load("Data/DEGsFetalChronic.RData", verbose = T)
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(fetal.chronic, unlist(SFARIgenes)), printExp = FALSE,SampleColors = "Default")
+```
+
+### Comparison across systems 
+
+```{r, message=FALSE,collapse=TRUE}
+load("Data/DEGsFetalChronic.RData", verbose = T)
+load("Data/DEGsOrganoidsChronic.RData", verbose = T)
+
+MixN <- list(OrganoidsDEGs=org.chronic, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronic)
+
+m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)))
+dotplot.multintersect(m)
+m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)))
+dotplot.multintersect(m)
+m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)))
+dotplot.multintersect(m)
+```
+
+
+
+### Data praparation
+
+For details on data filtering, normalization, batch correction and differential expression analysis, see [here](./DataPreparation/SVAcorrectedObjects.html) 
+
+For details on the preparation of Neurodevelopmental disorder genes, see [here](./DataPreparation/ASD/DataPreparation.html) 
+
+***
+
+```{r child='footer.Rmd'}
+```
+
+
+```{r SaveSession}
+sessionInfo()
+```
+

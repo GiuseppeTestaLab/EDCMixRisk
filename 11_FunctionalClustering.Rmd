@@ -1,0 +1,356 @@
+---
+title: "RNASeq Characterization of differential expression results: MixN chronic treatment in fetal vs Organoids"
+date: 'Date: `r format(Sys.Date(), "%B %d, %Y")`'
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        theme: 'yeti'
+        highlight: 'tango'
+        code_folding: hide
+params: 
+    Dataset: 'FetalVsOrganoidsChronic'
+    topTagFile: 'Data/AllSEcorrected.RData'
+    FDRTr: 0.05
+    LogFCTr: 0.5
+    OutputFolder: 'Data/FunctionalAnalysis/13_FetalVsOrganoidsMixN/'
+    GOSeq: 'Yes'
+    TopGO: 'Yes'
+    Camera: 'Yes'
+    Gsea: 'Yes'
+    GseaPvalSel: 0.05
+     
+---
+
+
+### Environment Set Up
+
+####  Parameters
+
+```{r EnvironmentSetupI, collapse=TRUE}
+for (i in 1:length(params))
+  print(paste('Parameter:', names(params)[i], ' - Value:', params[[i]], '- Class:', class(params[[i]])))
+```
+
+```{r FolderSetting}
+Dataset <- params$Dataset
+LogFCTh <- params$LogFCTr
+FDRTh <- params$FDRTr
+OutputFolder <- ifelse(is.null(params$OutputFolder), getwd(), params$OutputFolder) 
+
+if (dir.exists(OutputFolder) == FALSE) {
+  dir.create(OutputFolder, recursive=FALSE)
+}
+
+if (dir.exists(paste0(OutputFolder, 'TopGO')) == FALSE) {
+  dir.create(paste0(OutputFolder, 'TopGO'), recursive=FALSE)
+}
+
+if (dir.exists(paste0(OutputFolder, 'Gsea')) == FALSE) {
+  dir.create(paste0(OutputFolder, 'Gsea'), recursive=FALSE)
+}
+
+```
+
+#### Libraries and functions
+
+```{r EnvironmentSetupII, collapse=TRUE}
+#library(EDCMixRisk)
+library(stringr)
+library(DT)
+library(ggplot2)
+library(ggrepel)
+library(AnnotationDbi)
+library(org.Hs.eg.db)
+library(gridExtra)
+library(RColorBrewer)
+library(topGO)
+library(fgsea)
+library(tidyr)
+library(dplyr)
+```
+
+```{r EnvironmentSetupIII}
+options(stringsAsFactors=FALSE)
+```
+
+
+```{r SourceFile, collapse=TRUE}
+source('Functions/EDC_Functions.R')
+source('Functions/CriFormatted.R')
+source('Functions/goseq.R')
+```
+
+
+****
+
+###  Data Upload: differential expression results
+
+upload the result if differential expression analysis after the clustering of MixN DEGs between Organoids and Fetal.
+
+```{r Data, collapse=TRUE}
+load(params$topTagFile, verbose=TRUE)
+load("Data/DEGsCluster.RData", verbose = T)
+```
+
+
+****
+
+### TOPGO for genes consistent between HFPNSC and CO
+
+Gene ontology enrichment analysis is performed on the sets of genes found from the cluster analysis between fetal and organoids, using TopGO with Fisher statistics and weight01 algorithm. 
+
+#### Selection of modulated genes and generation of gene vectors
+
+I generate vectors for the gene universe, all modulated genes, up-regulated genes and down-regulated genes in the format required by TopGO.
+
+
+```{r TopGOSetI, collapse=TRUE}
+UniverseGenes <- union(rownames(DEAs$chronic.org),rownames(DEAs$chronic.fetal))
+DEG <- union(dc$up.both,dc$down.both)
+DEGup <- dc$up.both
+DEGdown <- dc$down.both 
+  
+# generation of named vectors in the format required by TopGO
+GeneVectors <- list()
+GeneVectors$DEGenes <- factor(as.integer(UniverseGenes%in%DEG))
+names(GeneVectors$DEGenes) <- UniverseGenes
+GeneVectors$DEGenesDown <- factor(as.integer(UniverseGenes%in%DEGdown))
+names(GeneVectors$DEGenesDown) <- UniverseGenes
+GeneVectors$DEGenesUp <- factor(as.integer(UniverseGenes%in%DEGup))
+names(GeneVectors$DEGenesUp) <- UniverseGenes
+```
+
+
+Therefore: 
+
+ * universe genes: __`r length(GeneVectors$DEGenes)`__ genes
+ * modulated genes consistent in the 2 systems: __`r table(GeneVectors$DEGenes)['1']`__ genes
+ * modulated genes down in the 2 systems:  __`r table(GeneVectors$DEGenesDown)['1']`__  genes of interest
+ * modulated genes up in the 2 systems:  __`r table(GeneVectors$DEGenesUp)['1']`__ genes of interest  
+
+
+```{r TopGOSetII, collapse=TRUE}
+BpEval <- ifelse(params$TopGO=='Yes', TRUE, FALSE)
+# the analysis is not done if the number of DEGs is lower than 2.
+BpEval <- ifelse(table(GeneVectors$DEGenes)['1'] < 2 | is.na(table(GeneVectors$DEGenes)['1']) | table(GeneVectors$DEGenesDown)['1'] < 2 | is.na(table(GeneVectors$DEGenesDown)['1']) | table(GeneVectors$DEGenesUp)['1'] < 2 | is.na(table(GeneVectors$DEGenesUp)['1']), FALSE, BpEval)
+```
+
+On the basis of the analysis settings or the number of differentially expressed genes, TopGO analysis __`r ifelse(BpEval==TRUE, 'IS', 'IS NOT')` performed__.
+
+
+#### Biological Process for genes consistently modulated in the 2 systems: `r length(GeneVectors$DEGenes[GeneVectors$DEGenes==1])` genes
+
+
+```{r, eval=BpEval, collapse=TRUE}
+# I generate a list that contains the association between each gene and the GO terms that are associated to it
+BPann <- topGO::annFUN.org(whichOnto="BP", feasibleGenes=names(GeneVectors$DEGenes), mapping="org.Hs.eg.db", ID="symbol") %>% inverseList()
+
+# Wrapper function for topGO analysis (see helper file)
+ResBPAll <- topGOResults(Genes=GeneVectors$DEGenes, gene2GO=BPann, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+write.table(ResBPAll$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResults.txt'), sep='\t', row.names=FALSE)
+```
+
+#### Biological Process Analysis for genes down in the 2 systems: `r length(GeneVectors$DEGenesDown[GeneVectors$DEGenesDown==1])` genes
+
+```{r, eval=BpEval, collapse=TRUE}
+# I generate a list that contains the association between each gene and the GO terms that are associated to it
+BPannDown <- topGO::annFUN.org(whichOnto="BP", feasibleGenes=names(GeneVectors$DEGenesDown), mapping="org.Hs.eg.db", ID="symbol") %>% inverseList()
+
+# Wrapper function for topGO analysis (see helper file)
+ResBPAllDown <- topGOResults(Genes=GeneVectors$DEGenesDown, gene2GO=BPannDown, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+write.table(ResBPAllDown$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsDown.txt'), sep='\t', row.names=FALSE)
+```
+
+#### Biological Process Analysis for genes up in the 2 systems: `r length(GeneVectors$DEGenesDown[GeneVectors$DEGenesDown==1])` genes
+
+```{r, eval=BpEval, collapse=TRUE}
+# I generate a list that contains the association between each gene and the GO terms that are associated to it
+BPannUp <- topGO::annFUN.org(whichOnto="BP", feasibleGenes=names(GeneVectors$DEGenesUp), mapping="org.Hs.eg.db", ID="symbol") %>% inverseList()
+
+# Wrapper function for topGO analysis (see helper file)
+ResBPAllUp <- topGOResults(Genes=GeneVectors$DEGenesUp, gene2GO=BPannUp, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+write.table(ResBPAllUp$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsUp.txt'), sep='\t', row.names=FALSE)
+```
+
+
+#### Result visualization: Barplot
+
+```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
+# the if clauses avoids an error in case there is one empty category
+if(dim(ResBPAllUp$ResSel)[1] > 0 & dim(ResBPAllDown$ResSel)[1] > 0 & dim(ResBPAll$ResSel)[1] > 0){
+
+TopGOBar <- topGOBarplotAll(TopGOResAll=ResBPAll$ResSel, TopGOResDown=ResBPAllDown$ResSel, TopGOResUp=ResBPAllUp$ResSel, terms=8, pvalTh=0.01, title=NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/Barplot.pdf'), TopGOBar, 
+       width=13, height=8)
+  }
+```
+
+
+### GOSeq for Gene Ontology Enrichment analysis
+
+```{r GOSeqSet, collapse=TRUE}
+GOSeqEval <- ifelse(params$GOSeq=='Yes', TRUE, FALSE)
+```
+
+Gene ontology enrichment analysis is performed on the sets of genes found from the cluster analysis between fetal and organoids.
+
+#### GOSeq for genes consistent between the 2 systems
+```{r, eval=GOSeqEval, collapse=TRUE, fig.width=5, fig.height=5}
+#descreasing the threshold to get an idea of the category
+GOSeq <- goseq.enrichment(names(GeneVectors$DEGenes), names(GeneVectors$DEGenes)[GeneVectors$DEGenes==1], "GO:BP", cutoff=0.3)
+#colnames(GOSeq) <- c("GO.ID", "Term", "Annotated", "Significant", "enrichment", "PValue", "FDR", "genes")
+if(dim(GOSeq)[1] > 0) {
+gotr <- goTreemap(GOSeq, removeParents=FALSE)
+} # to avoid errors if no results are found
+```
+
+****
+
+### TOPGO for genes only altered in CO
+
+
+```{r, collapse=TRUE}
+UniverseGenes <- union(rownames(DEAs$chronic.org),rownames(DEAs$chronic.fetal))
+DEG <- dc$org.only
+
+# generation of named vectors in the format required by TopGO
+GeneVectors <- list()
+GeneVectors$DEGenes <- factor(as.integer(UniverseGenes%in%DEG))
+names(GeneVectors$DEGenes) <- UniverseGenes
+```
+
+
+Therefore: 
+
+ * universe genes: __`r length(GeneVectors$DEGenes)`__ genes
+ * modulated genes only in organoids: __`r table(GeneVectors$DEGenes)['1']`__ genes
+
+
+```{r, collapse=TRUE}
+BpEval <- ifelse(params$TopGO=='Yes', TRUE, FALSE)
+# the analysis is not done if the number of DEGs is lower than 2.
+BpEval <- ifelse(table(GeneVectors$DEGenes)['1'] < 2 | is.na(table(GeneVectors$DEGenes)['1']), FALSE, BpEval)
+```
+
+
+On the basis of the analysis settings or the number of differentially expressed genes, TopGO analysis __`r ifelse(BpEval==TRUE, 'IS', 'IS NOT')` performed__.
+
+
+#### Biological Process for genes modulated in organoids: `r length(GeneVectors$DEGenes[GeneVectors$DEGenes==1])` genes
+
+
+```{r, eval=BpEval, collapse=TRUE}
+# I generate a list that contains the association between each gene and the GO terms that are associated to it
+BPann <- topGO::annFUN.org(whichOnto="BP", feasibleGenes=names(GeneVectors$DEGenes), mapping="org.Hs.eg.db", ID="symbol") %>% inverseList()
+
+# Wrapper function for topGO analysis (see helper file)
+ResBPAll <- topGOResults(Genes=GeneVectors$DEGenes, gene2GO=BPann, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+write.table(ResBPAll$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsOrganoids.txt'), sep='\t', row.names=FALSE)
+```
+
+
+#### Result visualization: Barplot
+
+```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
+TopGOBar <- topGOBarplot(TopGORes =ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotOrganoids.pdf'), TopGOBar, 
+       width=13, height=8)
+```
+
+
+#### GOSeq for genes dysregulated only in organoids
+```{r, eval=GOSeqEval, collapse=TRUE, fig.width=5, fig.height=5}
+#descreasing the threshold to get an idea of the category
+GOSeq <- goseq.enrichment(names(GeneVectors$DEGenes), dc$org.only, "GO:BP", cutoff=0.3)
+#colnames(GOSeq) <- c("GO.ID", "Term", "Annotated", "Significant", "enrichment", "PValue", "FDR", "genes")
+if(dim(GOSeq)[1] > 0) {
+gotr <- goTreemap(GOSeq, removeParents=FALSE)
+} # to avoid errors if no results are found
+```
+
+****
+
+### TOPGO for genes only altered in HFPNSC
+
+
+```{r, collapse=TRUE}
+UniverseGenes <- union(rownames(DEAs$chronic.org),rownames(DEAs$chronic.fetal))
+DEG <- dc$fetal.only
+
+# generation of named vectors in the format required by TopGO
+GeneVectors <- list()
+GeneVectors$DEGenes <- factor(as.integer(UniverseGenes%in%DEG))
+names(GeneVectors$DEGenes) <- UniverseGenes
+```
+
+
+Therefore: 
+
+ * universe genes: __`r length(GeneVectors$DEGenes)`__ genes
+ * modulated genes only in HFPNSC: __`r table(GeneVectors$DEGenes)['1']`__ genes
+
+
+```{r, collapse=TRUE}
+BpEval <- ifelse(params$TopGO=='Yes', TRUE, FALSE)
+# the analysis is not done if the number of DEGs is lower than 2.
+BpEval <- ifelse(table(GeneVectors$DEGenes)['1'] < 2 | is.na(table(GeneVectors$DEGenes)['1']), FALSE, BpEval)
+```
+
+On the basis of the analysis settings or the number of differentially expressed genes, TopGO analysis __`r ifelse(BpEval==TRUE, 'IS', 'IS NOT')` performed__.
+
+
+#### Biological Process for genes modulated in HFPNSC: `r length(GeneVectors$DEGenes[GeneVectors$DEGenes==1])` genes
+
+
+```{r, eval=BpEval, collapse=TRUE}
+# I generate a list that contains the association between each gene and the GO terms that are associated to it
+BPann <- topGO::annFUN.org(whichOnto="BP", feasibleGenes=names(GeneVectors$DEGenes), mapping="org.Hs.eg.db", ID="symbol") %>% inverseList()
+
+# Wrapper function for topGO analysis (see helper file)
+ResBPAll <- topGOResults(Genes=GeneVectors$DEGenes, gene2GO=BPann, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+write.table(ResBPAll$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsHFPNSC.txt'), sep='\t', row.names=FALSE)
+```
+
+
+#### Result visualization: Barplot
+
+```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
+TopGOBar <- topGOBarplot(TopGORes=ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotHFPNSC.pdf'), TopGOBar, 
+       width=13, height=8)
+```
+
+
+#### GOSeq for genes dysregulated only in fetal
+```{r, eval=GOSeqEval, collapse=TRUE, fig.width=5, fig.height=5}
+#descreasing the threshold to get an idea of the category
+GOSeq <- goseq.enrichment(names(GeneVectors$DEGenes), dc$fetal.only, "GO:BP", cutoff=0.3)
+#colnames(GOSeq) <- c("GO.ID", "Term", "Annotated", "Significant", "enrichment", "PValue", "FDR", "genes")
+if(dim(GOSeq)[1] > 0) {
+gotr <- goTreemap(GOSeq, removeParents=FALSE)
+} # to avoid errors if no results are found
+```
+
+****
+
+### 9. Savings
+
+Most of the useful information has been saved during the analysis. Here I save the workspace and information about the session.
+
+```{r SaveSession}
+SessionInfo <- sessionInfo()
+Date <- date()
+#save.image(paste0(OutputFolder, 'FunctionalAnalysisWorkspace.RData'))
+```
+
+

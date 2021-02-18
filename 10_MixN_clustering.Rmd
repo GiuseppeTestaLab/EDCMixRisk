@@ -1,0 +1,129 @@
+---
+title: "12 mixN clustering"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+### Data loading
+
+```{r, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)
+  library(SEtools)
+  library(DT)
+  library(ggplot2)
+  library(cowplot)
+  library(ggrepel)
+  library(viper)
+  library(limma)
+})
+theme_set(theme_cowplot())
+source("Functions/EDC_Functions.R")
+source("Functions/CriFormatted.R")
+source("Functions/clustering.R")
+```
+
+```{r}
+load("Data/AllSEcorrected.RData")
+SEs <- lapply(SEs[1:3], FUN=function(x){
+  x <- x[,x$EXPO!="VITC"]
+  assays(x)$logFC <- assays(x)$corrected-rowMeans(assays(x)$corrected[,x$EXPO=="CNT"])
+  x
+})
+DEAs <- DEAs[1:3]
+# we get DEGs significant in at least one system
+degs <- getDEGsFromRes(DEAs)
+# we get 'cross-system degs'
+tmp <- sapply(DEAs, FUN=function(x) x[unique(unlist(degs)),"FDR"])
+q <- apply(tmp,1,weights=c(1,1,1),FUN=aggregation::lancaster)
+names(q) <- unique(unlist(degs))
+degs2 <- names(q)[q<0.05]
+```
+
+## Clusters of gene expression dyregulation between fetal and organoids
+```{r, fig.height=10}
+se <- mergeSEs(SEs[1:2], use.assays="logFC", do.scale = FALSE)
+degs2 <- intersect(degs2,row.names(se))
+# we cluster DEGs by foldchange in the chronic datasets
+lfcs <- prepLFC4clust2(assay(se)[degs2,],groups=paste(se$Dataset,se$EXPO))
+lfcs2 <- lfcs[,grep("T3|BPA",colnames(lfcs),invert=TRUE)]
+set.seed(1234)
+cl <- clusterWrapper(lfcs2, 2:15, nstart=3)
+rowData(se)$cluster <- factor(cl[["8"]]$cluster[row.names(se)])
+cg <- split(names(cl[["8"]]$cluster), cl[["8"]]$cluster)
+
+sehm(se[,grep("T3|BPA",colnames(se),invert=TRUE)], degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F)
+# we isolate clusters that are coherent between the two systems
+dc <- list( up.both=cg[[4]],
+			down.both=cg[[7]],
+			org.only=unlist(cg[c(1,2,3,8)]),
+			fetal.only=unlist(cg[c(5,6)])
+			)
+
+save(dc, file = "Data/DEGsCluster.RData")
+```
+
+## ASD genes
+```{r, fig.width=8, fig.height=8}
+load("Data/ASD.RData")
+ASD <- lapply(ASD,FUN=function(x) gsub(" ","",x))
+asd.degs <- intersect(unlist(dc[1:2]), unlist(ASD))
+sehm(se[,grep("T3|BPA",colnames(se),invert=TRUE)], asd.degs, do.scale = FALSE, anno_columns = c("EXPO2","Dataset"), toporder = "cluster", show_rownames = TRUE, breaks=0.995, main="ASD-associated consistent DEGs")
+```
+
+## Combining also acute exposure:
+
+```{r, fig.width=10, fig.height=4}
+se2 <- mergeSEs(SEs, use.assays="logFC", do.scale = FALSE)
+sehm(se2[,grep("T3|BPA",colnames(se2),invert=TRUE)], intersect(degs$acute.fetal,degs2), do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), breaks = 0.995, main="DEGs in acute exposure and at least one chronic system")
+```
+
+```{r, fig.width=10, fig.height=2}
+sehm(se2[,grep("T3|BPA",colnames(se2),invert=TRUE)], intersect(degs$acute.fetal,unlist(dc[1:2])), do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), breaks = 0.99, main=c("Consistent in chronic systems and\naltered upon acute exposure"))
+```
+
+### TF target enrichment among consistent DEGs
+
+```{r}
+load("Data/regulon_weighted.RData")
+regulon <- lapply(regulon, FUN=function(x) intersect(row.names(se),names(x$tfmode)))
+tf.en <- t(sapply(regulon, FUN=function(x){
+  c( overlap.up=length(intersect(x, dc$up.both)),
+     enrichment.up=log2(length(intersect(x, dc$up.both))/(length(dc$up.both)*length(x)/length(row.names(se)))),
+     p.up=overlap.prob(x, dc$up.both, row.names(se)),
+     overlap.down=length(intersect(x, dc$down.both)),
+     enrichment.down=log2(length(intersect(x, dc$down.both))/(length(dc$down.both)*length(x)/length(row.names(se)))),
+     p.down=overlap.prob(x, dc$down.both, row.names(se))
+  )
+}))
+tf.en <- tf.en[which(rowMax(tf.en[,grep("overlap",colnames(tf.en))])>1),]
+tf.en <- as.data.frame(tf.en[order(rowMin(tf.en[,grep("^p\\.",colnames(tf.en))])),])
+tf.en$gene <- row.names(tf.en)
+tf.en$q.up <- p.adjust(tf.en$p.up, "fdr")
+tf.en$q.down <- p.adjust(tf.en$p.down, "fdr")
+ggplot(tf.en, aes(enrichment.up, -log10(q.up), size=overlap.up)) + geom_point(alpha=0.3) + geom_text_repel(data=tf.en[which(tf.en$q.up<0.01),], mapping=aes(label=gene), show.legend = FALSE) + ggtitle("TF target enrichment among\nconsistently upregulated genes") + xlim(0,3)
+```
+
+Viper-based:
+
+```{r}
+load("Data/regulon_weighted.RData")
+vi1 <- viper(assays(SEs$chronic.org)$corrected, regulon, verbose=FALSE)
+vi2 <- viper(assays(SEs$chronic.fetal)$corrected, regulon, verbose=FALSE)
+i <- intersect(row.names(vi1),row.names(vi2))
+vi <- cbind(vi1[i,], vi2[i,])
+se$EXPO <- droplevels(se$EXPO)
+mm <- model.matrix(~se$Dataset+se$EXPO)
+tf.en2 <- topTable(eBayes(lmFit(vi,mm)),coef = c("se$EXPO1X","se$EXPO1000X"), number=Inf)
+head(tf.en2)
+head(tf.en2[intersect(row.names(tf.en2),degs2),])
+```
+
+```{r child='footer.Rmd'}
+```

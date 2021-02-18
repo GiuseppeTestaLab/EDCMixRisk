@@ -1,0 +1,18 @@
+BPA_ORG3.tif
+DAPI low thresh:479
+KI67 low thresh:1531
+Area KI67:169393.267
+Area DAPI:524619.753
+Area ratio KI67/DAPI:0.3229
+BPA_ORG1.tif
+DAPI low thresh:413
+KI67 low thresh:1530
+Area KI67:374201.627
+Area DAPI:1583869.97
+Area ratio KI67/DAPI:0.2363
+BPA_ORG2.tif
+DAPI low thresh:452
+KI67 low thresh:1223
+Area KI67:151965.187
+Area DAPI:552614.431
+Area ratio KI67/DAPI:0.275

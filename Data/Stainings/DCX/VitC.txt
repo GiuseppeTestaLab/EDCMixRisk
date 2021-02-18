@@ -1,0 +1,18 @@
+VITC_ORG3.tif
+DAPI low thresh:581
+KI67 low thresh:2193
+Area KI67:67607.8359
+Area DAPI:357356.29
+Area ratio KI67/DAPI:0.1892
+VITC_ORG1.tif
+DAPI low thresh:356
+KI67 low thresh:2074
+Area KI67:123802.422
+Area DAPI:671200.606
+Area ratio KI67/DAPI:0.1844
+VITC_ORG2.tif
+DAPI low thresh:379
+KI67 low thresh:2192
+Area KI67:247963.666
+Area DAPI:1364890.47
+Area ratio KI67/DAPI:0.1817

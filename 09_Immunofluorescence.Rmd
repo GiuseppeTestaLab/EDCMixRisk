@@ -1,0 +1,302 @@
+---
+title: "11_Immunofluorescence"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+### Data loading
+
+```{r, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)
+  library(SEtools)
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+})
+source("Functions/EDC_Functions.R")
+source("Functions/CriFormatted.R")
+```
+
+### import data KI67
+
+```{r}
+KI <- read.table("Data/Stainings/KI67/CNT.txt",header = F, sep="\t")
+KI <- as.data.frame(strsplit(as.character(KI$V1),":"))
+a <-  as.data.frame(KI[2,c(2:5)], row.names = as.character(KI[1,1]))
+colnames(a)=c("DAPI low thresh", "KI67 low thresh","Area KI67","Area DAPI")
+for (i in 2:(length(colnames(KI))/6))
+  {
+     b <- as.data.frame(KI[2,c(2:5)+ 6*i -6], row.names = as.character(KI[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+CNT <- a
+CNT$Expo <- "CNT"
+
+KI <- read.table("Data/Stainings/KI67/DMSO.txt",header = F, sep="\t")
+KI <- as.data.frame(strsplit(as.character(KI$V1),":"))
+a <-  as.data.frame(KI[2,c(2:5)], row.names = as.character(KI[1,1]))
+colnames(a)=c("DAPI low thresh", "KI67 low thresh","Area KI67","Area DAPI")
+for (i in 2:(length(colnames(KI))/6))
+  {
+     b <- as.data.frame(KI[2,c(2:5)+ 6*i -6], row.names = as.character(KI[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+DMSO <- a
+DMSO$Expo <- "DMSO"
+
+
+KI <- read.table("Data/Stainings/KI67/T3.txt",header = F, sep="\t")
+KI <- as.data.frame(strsplit(as.character(KI$V1),":"))
+a <-  as.data.frame(KI[2,c(2:5)], row.names = as.character(KI[1,1]))
+colnames(a)=c("DAPI low thresh", "KI67 low thresh","Area KI67","Area DAPI")
+for (i in 2:(length(colnames(KI))/6))
+  {
+     b <- as.data.frame(KI[2,c(2:5)+ 6*i -6], row.names = as.character(KI[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+T3 <- a
+T3$Expo <- "T3"
+
+KI <- read.table("Data/Stainings/KI67/BPA.txt",header = F, sep="\t")
+KI <- as.data.frame(strsplit(as.character(KI$V1),":"))
+a <-  as.data.frame(KI[2,c(2:5)], row.names = as.character(KI[1,1]))
+colnames(a)=c("DAPI low thresh", "KI67 low thresh","Area KI67","Area DAPI")
+for (i in 2:(length(colnames(KI))/6))
+  {
+     b <- as.data.frame(KI[2,c(2:5)+ 6*i -6], row.names = as.character(KI[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+BPA <- a
+BPA$Expo <- "BPA"
+
+KI <- read.table("Data/Stainings/KI67/MixN1X.txt",header = F, sep="\t")
+KI <- as.data.frame(strsplit(as.character(KI$V1),":"))
+a <-  as.data.frame(KI[2,c(2:5)], row.names = as.character(KI[1,1]))
+colnames(a)=c("DAPI low thresh", "KI67 low thresh","Area KI67","Area DAPI")
+for (i in 2:(length(colnames(KI))/6))
+  {
+     b <- as.data.frame(KI[2,c(2:5)+ 6*i -6], row.names = as.character(KI[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+MixN1X <- a
+MixN1X$Expo <- "MixN1X"
+
+KI <- read.table("Data/Stainings/KI67/MixN1000X.txt",header = F, sep="\t")
+KI <- as.data.frame(strsplit(as.character(KI$V1),":"))
+a <-  as.data.frame(KI[2,c(2:5)], row.names = as.character(KI[1,1]))
+colnames(a)=c("DAPI low thresh", "KI67 low thresh","Area KI67","Area DAPI")
+for (i in 2:(length(colnames(KI))/6))
+  {
+     b <- as.data.frame(KI[2,c(2:5)+ 6*i -6], row.names = as.character(KI[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+MixN1000X <- a
+MixN1000X$Expo <- "MixN1000X"
+
+KI <- rbind(CNT,DMSO,T3,BPA,MixN1X,MixN1000X)
+KI$`DAPI low thresh`<- as.numeric(as.character(KI$`DAPI low thresh`))
+KI$`KI67 low thresh`<- as.numeric(as.character(KI$`KI67 low thresh`))
+KI$`Area KI67`<- as.numeric(as.character(KI$`Area KI67`))
+KI$`Area DAPI`<- as.numeric(as.character(KI$`Area DAPI`))
+KI$ratio <- KI$`Area KI67`/KI$`Area DAPI`
+```
+
+### Violin plot the ratio between KI67area and DAPIarea
+
+```{r,fig.width=10}
+#boxplot(KI67$ratio~KI67$Expo)
+#KI$Expo <- factor(KI$Expo, levels=unique(KI$Expo))
+KI$Expo <- factor(KI$Expo, levels=c("CNT","DMSO","MixN1X","MixN1000X","BPA","T3" ))
+#KI$Expo <- factor(KI$Expo, levels=c("Y", "X", "Z"))
+ggplot(KI, aes(x=Expo, y=ratio, color=Expo)) + 
+geom_violin() + 
+stat_summary(fun.data="mean_sdl", geom="crossbar", width=0.05) +
+geom_jitter(shape=16, position=position_jitter(0.2)) +
+ylab("KI67 positive area / DAPI positive area")
+```
+
+### plot the ratio between KI67area and DAPIarea
+
+```{r,fig.width=10}
+KI$Expo <- factor(KI$Expo, levels=c("CNT","DMSO","MixN1X","MixN1000X","BPA","T3" ))
+
+SampleColors <- c("CNT"="#0000FF", "DMSO"="#2900D5", "MixN1X"="#7E0080", "MixN1000X"="#FF0000", "BPA"="#117733", "T3"="yellow")
+plot <- ggplot(data=KI, aes(Expo,ratio, fill=Expo))+
+    geom_jitter(position=position_dodge(0.6), size=5, pch=21) + 
+    stat_summary(fun.y=mean, fun.ymin=mean, fun.ymax=mean,
+                 geom="crossbar", width=0.5, col='gray35', position=position_dodge(0.6)) + 
+    scale_fill_manual(values=SampleColors) +
+    theme_bw() + xlab('') +
+    theme(plot.title = element_text(face='bold', colour='darkred', size=18, hjust=0.5), 
+          axis.title=element_text(size=14), axis.text=element_text(size=12.5, angle=45, hjust=1)) +
+  ylab("KI67 positive area / DAPI positive area")+
+  xlab("Expo")
+  
+plot
+```
+
+
+### import data DCX
+
+```{r}
+DCX <- read.table("Data/Stainings/DCX/CNT.txt",header = F, sep="\t")
+DCX <- as.data.frame(strsplit(as.character(DCX$V1),":"))
+a <-  as.data.frame(DCX[2,c(2:5)], row.names = as.character(DCX[1,1]))
+colnames(a)=c("DAPI low thresh", "DCX low thresh","Area DCX","Area DAPI")
+for (i in 2:(length(colnames(DCX))/6))
+  {
+     b <- as.data.frame(DCX[2,c(2:5)+ 6*i -6], row.names = as.character(DCX[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+CNT <- a
+CNT$Expo <- "CNT"
+
+DCX <- read.table("Data/Stainings/DCX/DMSO.txt",header = F, sep="\t")
+DCX <- as.data.frame(strsplit(as.character(DCX$V1),":"))
+a <-  as.data.frame(DCX[2,c(2:5)], row.names = as.character(DCX[1,1]))
+colnames(a)=c("DAPI low thresh", "DCX low thresh","Area DCX","Area DAPI")
+for (i in 2:(length(colnames(DCX))/6))
+  {
+     b <- as.data.frame(DCX[2,c(2:5)+ 6*i -6], row.names = as.character(DCX[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+DMSO <- a
+DMSO$Expo <- "DMSO"
+
+
+DCX <- read.table("Data/Stainings/DCX/T3.txt",header = F, sep="\t")
+DCX <- as.data.frame(strsplit(as.character(DCX$V1),":"))
+a <-  as.data.frame(DCX[2,c(2:5)], row.names = as.character(DCX[1,1]))
+colnames(a)=c("DAPI low thresh", "DCX low thresh","Area DCX","Area DAPI")
+for (i in 2:(length(colnames(DCX))/6))
+  {
+     b <- as.data.frame(DCX[2,c(2:5)+ 6*i -6], row.names = as.character(DCX[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+T3 <- a
+T3$Expo <- "T3"
+
+DCX <- read.table("Data/Stainings/DCX/BPA.txt",header = F, sep="\t")
+DCX <- as.data.frame(strsplit(as.character(DCX$V1),":"))
+a <-  as.data.frame(DCX[2,c(2:5)], row.names = as.character(DCX[1,1]))
+colnames(a)=c("DAPI low thresh", "DCX low thresh","Area DCX","Area DAPI")
+for (i in 2:(length(colnames(DCX))/6))
+  {
+     b <- as.data.frame(DCX[2,c(2:5)+ 6*i -6], row.names = as.character(DCX[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+BPA <- a
+BPA$Expo <- "BPA"
+
+DCX <- read.table("Data/Stainings/DCX/MixN1X.txt",header = F, sep="\t")
+DCX <- as.data.frame(strsplit(as.character(DCX$V1),":"))
+a <-  as.data.frame(DCX[2,c(2:5)], row.names = as.character(DCX[1,1]))
+colnames(a)=c("DAPI low thresh", "DCX low thresh","Area DCX","Area DAPI")
+for (i in 2:(length(colnames(DCX))/6))
+  {
+     b <- as.data.frame(DCX[2,c(2:5)+ 6*i -6], row.names = as.character(DCX[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+MixN1X <- a
+MixN1X$Expo <- "MixN1X"
+
+DCX <- read.table("Data/Stainings/DCX/MixN1000X.txt",header = F, sep="\t")
+DCX <- as.data.frame(strsplit(as.character(DCX$V1),":"))
+a <-  as.data.frame(DCX[2,c(2:5)], row.names = as.character(DCX[1,1]))
+colnames(a)=c("DAPI low thresh", "DCX low thresh","Area DCX","Area DAPI")
+for (i in 2:(length(colnames(DCX))/6))
+  {
+     b <- as.data.frame(DCX[2,c(2:5)+ 6*i -6], row.names = as.character(DCX[1,i*6 -5]))
+     colnames(b) <- colnames(a)
+     a <- rbind(a,  b)
+  }
+MixN1000X <- a
+MixN1000X$Expo <- "MixN1000X"
+
+DCX <- rbind(CNT,DMSO,T3,BPA,MixN1X,MixN1000X)
+DCX$`DAPI low thresh`<- as.numeric(as.character(DCX$`DAPI low thresh`))
+DCX$`DCX low thresh`<- as.numeric(as.character(DCX$`DCX low thresh`))
+DCX$`Area DCX`<- as.numeric(as.character(DCX$`Area DCX`))
+DCX$`Area DAPI`<- as.numeric(as.character(DCX$`Area DAPI`))
+DCX$ratio <- DCX$`Area DCX`/DCX$`Area DAPI`
+```
+
+### Violin plot the ratio between DCXarea and DAPIarea
+
+```{r,fig.width=10}
+#boxplot(KI67$ratio~KI67$Expo)
+DCX$Expo <- factor(DCX$Expo, levels=c("CNT","DMSO","MixN1X","MixN1000X","BPA","T3" ))
+DCX$SampleColors <- c(rep("#0000FF",3), rep("#2900D5",3), rep("yellow", 3), rep("#117733",3), rep("#7E0080",5), rep("#FF0000",5))
+#KI$Expo <- factor(KI$Expo, levels=c("Y", "X", "Z"))
+ggplot(DCX, aes(x=Expo, y=ratio, color=Expo)) + 
+geom_violin() + 
+stat_summary(fun.data="mean_sdl", geom="crossbar", width=0.05) +
+geom_jitter(shape=16, position=position_jitter(0.2)) +
+ylab("DCX positive area / DAPI positive area")
+```
+
+### plot the ratio between between DCXarea and DAPIarea quantified on entire organoids
+
+```{r,fig.width=10}
+DCX$Expo <- factor(DCX$Expo, levels=c("CNT","DMSO","MixN1X","MixN1000X","BPA","T3" ))
+
+SampleColors <- c("CNT"="#0000FF", "DMSO"="#2900D5", "MixN1X"="#7E0080", "MixN1000X"="#FF0000", "BPA"="#117733", "T3"="yellow")
+plot <- ggplot(data=DCX, aes(Expo,ratio, fill=Expo))+
+    geom_jitter(position=position_dodge(0.6), size=5, pch=21) + 
+    stat_summary(fun.y=mean, fun.ymin=mean, fun.ymax=mean,
+                 geom="crossbar", width=0.5, col='gray35', position=position_dodge(0.6)) + 
+    scale_fill_manual(values=SampleColors) +
+    theme_bw() + xlab('') +
+    theme(plot.title = element_text(face='bold', colour='darkred', size=18, hjust=0.5), 
+          axis.title=element_text(size=14), axis.text=element_text(size=12.5, angle=45, hjust=1)) +
+  ylab("DCX positive area / DAPI positive area")+
+  xlab("Expo")
+  
+plot
+```
+
+### Transcriptomic associated data
+#### Proliferation
+```{r,fig.width=10}
+load("Data/AllSEcorrected.RData", verbose = T)
+Org_chronic <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X" | SEs$chronic.org$EXPO=="BPA0.04X" | SEs$chronic.org$EXPO=="T3")]
+ProlGenes <- c('MKI67','CCNB1', 'CCNB2', 'CDC20', 'CDC20B', 'CDCA8', 'HMGB2')
+geneStripPairEDCMix(SE = Org_chronic,GeneSet = ProlGenes,printExp = FALSE,SampleColors = "Default")
+ProlGenes <- c('MKI67','CCNB1', 'CDC20', 'HMGB2')
+geneStripPairEDCMix(SE = Org_chronic,GeneSet = ProlGenes,printExp = FALSE,SampleColors = "Default")
+```
+
+#### Neuronal Differentiation
+```{r,fig.width=10}
+load("Data/AllSEcorrected.RData", verbose = T)
+NeuronGenes <- c('DCX',"SATB2","NEUROG1","SYP","MAP2","RBFOX3","L1CAM")   
+geneStripPairEDCMix(SE = Org_chronic,GeneSet = NeuronGenes,printExp = FALSE, SampleColors = "Default")
+NeuronGenes <- c('DCX',"SYP","MAP2","RBFOX3")   
+geneStripPairEDCMix(SE = Org_chronic,GeneSet = NeuronGenes,printExp = FALSE, SampleColors = "Default")
+```
+
+***
+
+```{r child='footer.Rmd'}
+```

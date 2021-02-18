@@ -1,0 +1,128 @@
+---
+title: "Surrogate Variable Analysis, Batch correction and Differential Expression Analysis"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+
+```{r}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)
+  library(SEtools)   
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+})
+load("../Data/geneLengths.RData")
+source("../Functions/EDC_Functions.R")
+load("../Data/TotalSumExp.RData",verbose=T)
+```
+
+# MixN 
+
+
+```{r}
+# subset to chronic data
+se <- Total[,which(Total$EXPOduration %in% c("Chronic 15 days","Chronic50days"))]
+# refactor EXPO to have DMSO as the base factor, and the other levels in a decent order
+se$EXPO <- factor(as.character(se$EXPO),levels=c("DMSO","CNT","1X","1000X","BPA0.04X","T3","VITC"))
+se$EXPO2 <- se$EXPO
+# we will consider CNT and DMSO together; comment out following to use DMSO as baseline
+levels(se$EXPO) <- c("CNT","CNT","1X","1000X","BPA0.04X","T3","VITC")
+# we treat the batch as factor and use 2018 as the base level because it has the most samples
+se$MixtureBatch <- relevel(as.factor(se$MixtureBatch),"2018")
+se <- se[,order(se$type, se$EXPO, se$MixtureBatch)]
+
+# we filter and normalize the two datasets separately:
+org <- filterGenes(se[,which(se$EXPOduration=="Chronic50days")])
+dds.org <- calcNormFactors(DGEList(assay(org)))
+assays(org)$logcpm <- log(cpm(dds.org)+0.1)
+
+fe <- filterGenes(se[,which(se$EXPOduration=="Chronic 15 days")])
+dds.fe <- calcNormFactors(DGEList(assay(fe)))
+assays(fe)$logcpm <- log(cpm(dds.fe)+0.1)
+```
+
+<br/><br/>
+
+## SVA
+
+## Organoids chronic
+
+```{r, fig.height=12, fig.width=12}
+# performs the SVA analysis
+sv <- svacor(org, ~MixtureBatch+EXPO, ~MixtureBatch,regressOutNull = T)
+# we put the corrected data in the total SE object 
+assays(org)$corrected <- sv$cor
+
+# we include the SVs in the object's metadata
+colData(org) <- cbind(colData(org),sv$sv)
+
+#DEA
+fit <- glmQLFit(estimateDisp(dds.org,sv$mm),sv$mm)
+res.org <- as.data.frame(topTags(glmQLFTest(fit,c("EXPO1X","EXPO1000X")),n=Inf))
+```
+
+## Fetal chronic
+
+```{r, fig.height=12, fig.width=12}
+# performs the SVA analysis
+sv <- svacor(fe, ~MixtureBatch+EXPO, ~MixtureBatch,regressOutNull = T)
+# we put the corrected data in the total SE object 
+assays(fe)$corrected <- sv$cor
+
+# we include the SVs in the object's metadata
+colData(fe) <- cbind(colData(fe),sv$sv)
+
+#DEA
+fit <- glmQLFit(estimateDisp(dds.fe,sv$mm),sv$mm)
+res.fe <- as.data.frame(topTags(glmQLFTest(fit,c("EXPO1X","EXPO1000X")),n=Inf))
+```
+
+## Fetal acute
+
+```{r, fig.width=10, fig.height=8}
+# we prepare the acute fetal dataset
+se2.fe <- filterGenes(Total[,which(Total$BrainArea=="Cortex" & Total$Mix=="MixN" & Total$EXPOduration=="Acute 48 hours")])
+se2.fe$EXPO <- factor(as.character(se2.fe$EXPO),levels=c("DMSO","CNT","0.1X","1X","10X","100X","1000X","BPA0.04X","BPA1X","T3","T3MixN","VITC"))
+se2.fe$EXPO2 <- se2.fe$EXPO
+levels(se2.fe$EXPO) <- c("CNT","CNT","0.1X","1X","10X","100X","1000X","BPA0.04X","BPA1X","T3","T3MixN","VITC")
+se2.fe <- se2.fe[,order(se2.fe$EXPO)]
+se2.fe$YearOfExperiment <- factor(as.character(se2.fe$YearOfExperiment), levels = c("2016","2018","2019"))
+se2.fe$Line <- factor(as.character(se2.fe$Line), levels = c("E3381-1","E3361-1"))
+#correction
+sv <- svacor(se2.fe, ~YearOfExperiment+Line+EXPO,~YearOfExperiment+Line,regressOutNull = T)
+# We add normalized data to the object
+assays(se2.fe)$logcpm <- log(cpm(calcNormFactors(DGEList(assay(se2.fe))))+0.1)
+
+
+# we include the corrected data in the object
+assays(se2.fe)$corrected <- sv$cor
+#DEA
+dds.fe2 <- calcNormFactors(DGEList(assay(se2.fe)))
+fit <- glmQLFit(estimateDisp(dds.fe2, sv$mm),sv$mm)
+res.fe2 <- as.data.frame(topTags(glmQLFTest(fit,c("EXPO0.1X","EXPO1X","EXPO10X","EXPO100X","EXPO1000X")),n=Inf))
+```
+
+
+```{r}
+# we then merge all SEs
+SEs <- list(chronic.org=org, chronic.fetal=fe, acute.fetal=se2.fe)
+DEAs <- list(chronic.org=res.org, chronic.fetal=res.fe, acute.fetal=res.fe2)
+
+save(SEs, DEAs, file = "../Data/AllSEcorrected.RData")
+```
+
+***
+
+```{r child='footer.Rmd'}
+```

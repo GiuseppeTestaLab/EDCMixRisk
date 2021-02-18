@@ -1,0 +1,178 @@
+---
+title: "1_MixN_Acute"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+### Data loading
+
+```{r, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)
+  library(SEtools)  
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+})
+source("Functions/EDC_Functions.R")
+load("Data/AllSEcorrected.RData",verbose=T)
+```
+
+### DEGs heatmaps
+```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+fet.acute <- row.names(DEAs$acute.fet)[which((abs(DEAs$acute.fet$logFC.EXPO0.1X) > 0.2 | abs(DEAs$acute.fet$logFC.EXPO1X) > 0.2 | abs(DEAs$acute.fet$logFC.EXPO10X) > 0.2 | abs(DEAs$acute.fet$logFC.EXPO100X) > 0.2 | abs(DEAs$acute.fet$logFC.EXPO1000X) > 0.2) & DEAs$acute.fet$FDR <= 0.05 & DEAs$acute.fet$logCPM > 0)]
+
+save(fet.acute,file = "Data/DEGsFetalAcute.RData")
+
+MixN_fetal_acute <- SEs$acute.fetal[,which(SEs$acute.fetal$EXPO=="CNT"|SEs$acute.fetal$EXPO=="0.1X"| SEs$acute.fetal$EXPO=="1X"| SEs$acute.fetal$EXPO=="10X"| SEs$acute.fetal$EXPO=="100X"| SEs$acute.fetal$EXPO=="1000X")]
+
+sehm(MixN_fetal_acute, assayName = "corrected", fet.acute,  do.scale = T, show_rownames = T, anno_columns = c("YearOfExperiment","Line","EXPO2"),  main="Acute fetal DEGs")
+
+```
+
+```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+sehm(MixN_fetal_acute, assayName = "corrected",fet.acute, gaps_at = "Line" , do.scale = T, show_rownames = T, anno_columns = c("YearOfExperiment","Line","EXPO2"), main="Acute fetal DEGs")
+```
+
+### DEGS dose-response patterns
+#### Lines combined
+
+```{r, message=FALSE,collapse=TRUE}
+Genes<- intersect(row.names(DEAs$acute.fet), fet.acute)
+
+design1 <- as.data.frame(colData(MixN_fetal_acute))
+fcmat1 <- getFoldchangeMatrix(assays(MixN_fetal_acute)$corrected[Genes,], design1, is.log = TRUE)
+
+# dose-response clusters of DEGs
+cc <- getConsClust(fcmat1,2)
+autoLayout(1)
+labs <- c("DMSO","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat1, design1, cc, labels=labs,  showNumber=T,spar = 0)
+```
+
+#### Line 1
+
+```{r, message=FALSE,collapse=TRUE}
+Genes<- intersect(row.names(DEAs$acute.fet), fet.acute)
+se <- SEs$acute.fetal[Genes,which((SEs$acute.fetal$EXPO=="CNT" | SEs$acute.fetal$EXPO=="0.1X" | SEs$acute.fetal$EXPO=="1X" | SEs$acute.fetal$EXPO=="10X" |SEs$acute.fetal$EXPO=="100X" | SEs$acute.fetal$EXPO=="1000X") & SEs$acute.fetal$Line=="E3381-1")]
+
+
+design1 <- as.data.frame(colData(se))
+fcmat1 <- getFoldchangeMatrix(assays(se)$corrected, design1, is.log = TRUE)
+
+# single DEGs
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+autoLayout(1)
+labs <- c("CNT","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat1, design1, cc, labels=labs,  showNumber=T,spar = 0)
+
+# dose-response clusters of DEGs
+cc <- getConsClust(fcmat1,2)
+autoLayout(1)
+labs <- c("DMSO","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat1, design1, cc, labels=labs,  showNumber=T,spar = 0)
+```
+
+#### Line 2
+
+```{r, message=FALSE,collapse=TRUE}
+se <- SEs$acute.fetal[Genes,which((SEs$acute.fetal$EXPO=="CNT" | SEs$acute.fetal$EXPO=="0.1X" | SEs$acute.fetal$EXPO=="1X" | SEs$acute.fetal$EXPO=="10X" |SEs$acute.fetal$EXPO=="100X" | SEs$acute.fetal$EXPO=="1000X") & SEs$acute.fetal$Line=="E3361-1")]
+
+design2 <- as.data.frame(colData(se))
+fcmat2 <- getFoldchangeMatrix(assays(se)$corrected, design2, is.log = TRUE)
+
+# single DEGs
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+labs <- c("CNT","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat2, design2, cc, labels=labs,  showNumber=T,spar = 0)
+
+# dose-response clusters of DEGs
+cc <- getConsClust(fcmat2,2)
+autoLayout(1)
+labs <- c("DMSO","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat2, design2, cc, labels=labs,  showNumber=T,spar = 0)
+```
+
+
+### SFARI 
+
+#### Lines combined
+
+```{r, message=FALSE,collapse=TRUE}
+load("Data/ASD.RData", verbose = T)
+Genes<- intersect(row.names(DEAs$acute.fet), SFARIgenes$score1)
+
+design1 <- as.data.frame(colData(MixN_fetal_acute))
+fcmat1 <- getFoldchangeMatrix(assays(MixN_fetal_acute)$corrected, design1, is.log = TRUE)
+
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+autoLayout(1)
+labs <- c("CNT","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat1, design1, cc, labels=labs,  showNumber=T,spar = 0)
+# SFARI DEGs downregulated
+Genes<- intersect(row.names(DEAs$acute.fet), fet.acute)
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+plotGenesClusters(fcmat1[c("EPHB2","CLSTN2"),], design1, cc[c("EPHB2","CLSTN2")], labels=labs,  showNumber=T, showEachGene = T,spar = 0)
+```
+
+#### Line 1
+
+```{r, message=FALSE,collapse=TRUE}
+se <- SEs$acute.fetal[Genes,which((SEs$acute.fetal$EXPO=="CNT" | SEs$acute.fetal$EXPO=="0.1X" | SEs$acute.fetal$EXPO=="1X" | SEs$acute.fetal$EXPO=="10X" |SEs$acute.fetal$EXPO=="100X" | SEs$acute.fetal$EXPO=="1000X") & SEs$acute.fetal$Line=="E3381-1")]
+
+
+design1 <- as.data.frame(colData(se))
+fcmat1 <- getFoldchangeMatrix(assays(se)$corrected, design1, is.log = TRUE)
+
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+autoLayout(1)
+labs <- c("CNT","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat1, design1, cc, labels=labs,  showNumber=T,spar = 0)
+# SFARI DEGs downregulated
+Genes<- intersect(row.names(DEAs$acute.fet), fet.acute)
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+plotGenesClusters(fcmat1[c("EPHB2","CLSTN2"),], design1, cc[c("EPHB2","CLSTN2")], labels=labs,  showNumber=T, showEachGene = T,spar = 0)
+```
+
+#### Line 2
+
+```{r, message=FALSE,collapse=TRUE}
+se <- SEs$acute.fetal[Genes,which((SEs$acute.fetal$EXPO=="CNT" | SEs$acute.fetal$EXPO=="0.1X" | SEs$acute.fetal$EXPO=="1X" | SEs$acute.fetal$EXPO=="10X" |SEs$acute.fetal$EXPO=="100X" | SEs$acute.fetal$EXPO=="1000X") & SEs$acute.fetal$Line=="E3361-1")]
+
+design2 <- as.data.frame(colData(se))
+fcmat2 <- getFoldchangeMatrix(assays(se)$corrected, design2, is.log = TRUE)
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+labs <- c("DMSO","0.1x","1x","10x","100x","1000x")
+plotGenesClusters(fcmat2, design2, cc, labels=labs,  showNumber=T,spar = 0)
+# SFARI DEGs downregulated
+Genes<- intersect(row.names(DEAs$acute.fet), fet.acute)
+cc<- c(1:length(Genes))
+names(cc) <- Genes
+plotGenesClusters(fcmat2[c("EPHB2","CLSTN2"),], design2, cc[c("EPHB2","CLSTN2")], labels=labs,  showNumber=T, showEachGene = T,spar = 0)
+```
+
+### Data praparation
+
+For details on data filtering, normalization, batch correction and differential expression analysis, see [here](./DataPreparation/SVAcorrectedObjects.html) 
+
+***
+
+
+```{r child='footer.Rmd'}
+```
