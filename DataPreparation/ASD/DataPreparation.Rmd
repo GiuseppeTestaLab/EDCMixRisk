@@ -11,8 +11,6 @@ output:
 ---
 
 
-To go back to the main page go [here](../../NDD.html)
-
 
 ## Data preparation
 SFARI genes were downloaded from https://gene.sfari.org/database/gene-scoring/
@@ -112,5 +110,17 @@ I then save all the objects
 ```{r}
 ASD <- list(SFARI=SFARIgenesAll, AutismKB=AutismKBgenes, Decipher=DecipherNeurogenes, MSSNG=MSSNGgenes, iPSYCH=iPSYCHgenes , NeuroOMIM= NeuroOmimGenes, ASDsevere=ASDsevereGenes, ID=IDGenes, SingleCellASD=SingleCellASDgenes, NeuronASD=NeuronASDgenes, AstrocyteASD=AstrocyteASDgenes)
 save(ASD, SFARI, SFARIgenes, AutismKB, DecipherNeuro, MSSNG, ASDsevere, ID, NeuroOmim, iPSYCH, GDI, file = "../../Data/ASD.RData")
+```
+
+
+***
+
+```{r child='footer.Rmd'}
+```
+
+
+
+```{r SaveSession}
+sessionInfo()
 ```
 
