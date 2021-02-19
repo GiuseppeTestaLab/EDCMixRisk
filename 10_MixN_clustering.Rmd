@@ -1,5 +1,5 @@
 ---
-title: "12 mixN clustering"
+title: "mixN clustering"
 output:
     html_document:
         toc: true
@@ -14,19 +14,23 @@ output:
 
 ```{r, warning=FALSE, message=FALSE}
 suppressPackageStartupMessages({
-  library(SummarizedExperiment)
-  library(SEtools)
+  library(ComplexHeatmap)
   library(DT)
   library(ggplot2)
   library(cowplot)
   library(ggrepel)
   library(viper)
   library(limma)
+  library(SummarizedExperiment)
+  library(SEtools)
+  library(igraph)
+  library(overlapper)
 })
 theme_set(theme_cowplot())
 source("Functions/EDC_Functions.R")
 source("Functions/CriFormatted.R")
 source("Functions/clustering.R")
+source("Functions/clusterEnrichment.R")
 ```
 
 ```{r}
@@ -59,6 +63,7 @@ rowData(se)$cluster <- factor(cl[["8"]]$cluster[row.names(se)])
 cg <- split(names(cl[["8"]]$cluster), cl[["8"]]$cluster)
 
 sehm(se[,grep("T3|BPA",colnames(se),invert=TRUE)], degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F)
+
 # we isolate clusters that are coherent between the two systems
 dc <- list( up.both=cg[[4]],
 			down.both=cg[[7]],
@@ -68,6 +73,34 @@ dc <- list( up.both=cg[[4]],
 
 save(dc, file = "Data/DEGsCluster.RData")
 ```
+
+### Characterize the clusters
+
+```{r, fig.height=7, fig.width=10}
+sets <- getMsigSets("C5")
+sets <- sets[grep("GO:BP",names(sets),fixed=TRUE)]
+names(sets) <- gsub("C5:GO:BP:GO_","",names(sets),fixed=TRUE)
+go <- clusterEnrichment(cg, sets=sets, universe=row.names(se))
+#plotClusterEnrichment(go)
+
+ag <- aggregate(assays(se)$logFC, by=list(cluster=rowData(se)$cluster), FUN=median)
+row.names(ag) <- ag[,1]
+se.ag <- SummarizedExperiment(list(logFC=ag[,-1]), colData=colData(se))
+h1 <- sechm(se.ag, row.names(se.ag), do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), breaks=1, show_rownames = F, width=unit(5,"cm"), sortRowsOn=NULL, cluster_rows=FALSE, row_title="Clusters", gaps_at="Dataset")
+h1
+#m <- t(plotClusterEnrichment(go, returnMatrix=TRUE))
+#colnames(m) <- breakStrings(tolower(gsub("_"," ",colnames(m))))
+#h2 <- Heatmap(m, cluster_rows=FALSE, show_column_dend=FALSE, name="Enrichment")
+#h1 + h2
+```
+
+```{r, fig.height=7, fig.width=10}
+go2 <- goclassify(cg, sets,)
+plot.goclassify(go2, n=16)
+h1 + plot.goclassify(go2, n=16, transpose=TRUE, cluster_rows=FALSE, show_column_dend=FALSE)
+```
+
+
 
 ## ASD genes
 ```{r, fig.width=8, fig.height=8}
@@ -127,3 +160,11 @@ head(tf.en2[intersect(row.names(tf.en2),degs2),])
 
 ```{r child='footer.Rmd'}
 ```
+
+
+
+```{r SaveSession}
+sessionInfo()
+```
+
+

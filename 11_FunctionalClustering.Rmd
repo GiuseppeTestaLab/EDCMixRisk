@@ -13,7 +13,7 @@ params:
     topTagFile: 'Data/AllSEcorrected.RData'
     FDRTr: 0.05
     LogFCTr: 0.5
-    OutputFolder: 'Data/FunctionalAnalysis/13_FetalVsOrganoidsMixN/'
+    OutputFolder: 'Data/FunctionalAnalysis/FetalVsOrganoidsMixN/'
     GOSeq: 'Yes'
     TopGO: 'Yes'
     Camera: 'Yes'
@@ -55,7 +55,6 @@ if (dir.exists(paste0(OutputFolder, 'Gsea')) == FALSE) {
 #### Libraries and functions
 
 ```{r EnvironmentSetupII, collapse=TRUE}
-#library(EDCMixRisk)
 library(stringr)
 library(DT)
 library(ggplot2)
@@ -341,16 +340,15 @@ gotr <- goTreemap(GOSeq, removeParents=FALSE)
 } # to avoid errors if no results are found
 ```
 
-****
 
-### 9. Savings
+***
 
-Most of the useful information has been saved during the analysis. Here I save the workspace and information about the session.
-
-```{r SaveSession}
-SessionInfo <- sessionInfo()
-Date <- date()
-#save.image(paste0(OutputFolder, 'FunctionalAnalysisWorkspace.RData'))
+```{r child='footer.Rmd'}
 ```
 
+
+
+```{r SaveSession}
+sessionInfo()
+```
 

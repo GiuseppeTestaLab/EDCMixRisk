@@ -1,5 +1,5 @@
 ---
-title: "7_MixVsSingleCompunds"
+title: "MixVsSingleCompunds"
 output:
     html_document:
         toc: true

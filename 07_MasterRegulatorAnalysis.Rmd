@@ -1,5 +1,5 @@
 ---
-title: "9_MasterRegulatorAnalysis"
+title: "MasterRegulatorAnalysis"
 output:
     html_document:
         toc: true
@@ -118,7 +118,11 @@ save(Org, Fet, file="Data/TFA.RData")
 
 ***
 
-To continue with the results you can go [here](10_HormonalPathways.html)
-
 ```{r child='footer.Rmd'}
+```
+
+
+
+```{r SaveSession}
+sessionInfo()
 ```

@@ -46,7 +46,7 @@ dround <- function(x, digits=3, roundGreaterThan1=FALSE){
       }
     }
     return(x)
-  }  
+  }
   if(roundGreaterThan1){
     w <- 1:length(x)
   }else{
@@ -79,7 +79,7 @@ dround <- function(x, digits=3, roundGreaterThan1=FALSE){
 #' @export
 TFA <- function(se, dea, design, regulon, pleiotropy=TRUE, testCoef=NULL, assayName=NULL, degs=NULL, ...){
   suppressPackageStartupMessages({
-    library(SummarizedExperiment)  
+    library(SummarizedExperiment)
     library(viper)
     library(edgeR)
   })
@@ -120,7 +120,7 @@ TFA <- function(se, dea, design, regulon, pleiotropy=TRUE, testCoef=NULL, assayN
   colnames(res1)[(ncol(res1)-3)+1:3] <- c("meanActivity", "PValue", "FDR")
   maxfc <- function(x){ x[order(abs(x), decreasing=TRUE)[1]] }
   if(ncol(res1)>4) res1 <- cbind(max.logFC=apply(res1[,-1*((ncol(res1)-3)+1:3)],1,FUN=maxfc), res1)
-  
+
   vi2 <- vi2[row.names(res1),]
   rd <- dround(res1)
   colnames(rd) <- paste0("activity.", colnames(rd))
@@ -132,7 +132,7 @@ TFA <- function(se, dea, design, regulon, pleiotropy=TRUE, testCoef=NULL, assayN
   rd2 <- dround(dea[tfg,intersect(c("baseMean","logFC","PValue","FDR"),colnames(dea))])
   row.names(rd2) <- row.names(rd)
   colnames(rd2) <- paste("expression",colnames(rd2),sep=".")
-  
+
   tfs <- lapply(regulon, FUN=function(x){ names(x$tfmode) })
   if(is.null(degs)) degs <- row.names(dea)[which(dea$FDR < 0.05)]
   #bg <- unique(c(intersect(unlist(tfs),row.names(dea)),degs))
@@ -152,18 +152,18 @@ TFA <- function(se, dea, design, regulon, pleiotropy=TRUE, testCoef=NULL, assayN
 ORA <- function (x, bg, gsets, minSize = 5){
   gsets <- lapply(gsets, y = bg, FUN = intersect)
   gsets <- gsets[which(sapply(gsets, length) >= minSize)]
-  res <- data.frame(Term = names(gsets), setSize = sapply(gsets, 
+  res <- data.frame(Term = names(gsets), setSize = sapply(gsets,
                                                           length))
   res$overlap <- sapply(gsets, y = x, FUN = function(x, y) {
     length(intersect(x, y))
   })
   expected <- sapply(gsets, length) * length(x)/length(bg)
   res$Enrichment <- round(log2(res$overlap/expected), 2)
-  res$PValue <- dround(sapply(gsets, set2 = x, universe = bg, 
+  res$PValue <- dround(sapply(gsets, set2 = x, universe = bg,
                               FUN = overlap.prob))
   res <- res[which(res$overlap > 0), ]
   res$FDR <- dround(p.adjust(res$PValue))
-  res$genes <- sapply(gsets[row.names(res)], y = x, FUN = function(x, 
+  res$genes <- sapply(gsets[row.names(res)], y = x, FUN = function(x,
                                                                    y) {
     paste(intersect(x, y), collapse = ", ")
   })
@@ -215,7 +215,7 @@ plotTFA <- function(x, color=~expression.logFC, size=~-log10(expression.FDR)){
     tx <- paste0(tx, "\ntarget enrichment: ", x$targetEnrichment," (", x$nbTargets," targets)")
     tx <- paste0(tx, "\ntarget ORA FDR: ", x$targetEnrFDR)
   }
-  
+
   p <- plot_ly( data=x,
                 x=~activity.max.logFC,
                 y=~-log10(activity.FDR),
@@ -304,7 +304,7 @@ getDEGsFromRes <- function(res, threshold = 0.05, minLogFC=0, logCPM=0){
 #' doDEA
 #'
 #' A wrapper to perform differential expression analysis.
-#' 
+#'
 #' @param counts The matrix with the gene counts.
 #' @param design The design matrix with the info about each sample.
 #' @param independentVar The independent variable, default `concentration`.
@@ -322,7 +322,7 @@ doDEA <- function(counts, design, independentVar="concentration", correctFor="li
   if(length(unique(dd$concentration))==2){
     dd$concentration <- as.character(dd$concentration)
   }else{
-    if(independentVar!="line")	concentration <- as.numeric(dd$concentration)	
+    if(independentVar!="line")	concentration <- as.numeric(dd$concentration)
   }
   if(!is.null(correctFor)){
     if(correctFor %in% colnames(design) & length(unique(design[[correctFor]]))>1){
@@ -361,7 +361,7 @@ doDEA <- function(counts, design, independentVar="concentration", correctFor="li
 #' getClusterXvalues
 #'
 #' Models the mean smoothed foldchange values of a cluster of genes at each concentration.
-#' 
+#'
 #' @param e The matrix with the gene counts.
 #' @param design The design matrix with the info about each sample
 #' @param geneClusters A vector of cluster assignment for all genes (values are cluster numbers, names are gene names).
@@ -483,15 +483,15 @@ getClusterXvalues <- function(e,design,geneClusters=NULL,cluster=NULL,correctFor
 #' getFoldchangeMatrix
 #'
 #' Get a matrix of Foldchanges relative to the DMSO sample from the counts matrix of a given set of genes
-#' 
+#'
 #' @param x The matrix with the normalized gene counts.
 #' @param design The design matrix with the info about each sample
 #' @param by The line or replicate by which to calculate FC (e.g. must include a ctrl related to each treated)
 #' @param ctrls Which samples are controls; if omitted, will attempt to fetch from the design matrix.
 #' @param maxLog2FC If given, flattens the logFC to the specific value.
 #' @param is.log Logical indicating whether `x` is already log-transformed (default FALSE)
-#' 
-#' 
+#'
+#'
 #' @return A matrix of foldchanges
 #'
 #' @export
@@ -530,14 +530,14 @@ getFoldchangeMatrix <- function(x,design,by="line",ctrls=NULL,maxLog2FC=NULL,is.
 #' plotFoldchangeMatrix
 #'
 #' Plot heatmap of Foldchanges of each sample relative to the DMSO for a given set of genes
-#' 
+#'
 #' @param x The matrix with the foldchanges of the gene set.
 #' @param design The design matrix with the info about each sample
 #' @param geneClusters An optional vector of cluster assignment for all genes (values are cluster numbers, names are gene names), to add to the heatmap annotation.
 #' @param show_rownames Logical; whether to show gene names (default FALSE).
 #' @param col Color palette.
 #' @param breaks Numeric vector indicating the values at which to change colors.
-#' 
+#'
 #' @export
 plotFoldchangeMatrix <- function(x,design, geneClusters=NULL,show_rownames=F,col=colorRampPalette(c("blue", "black", "yellow"))(29),breaks=c(-6,seq(-2.5,2.5,length.out=28),6)){
   o <- order(design$line, design$concentration)
@@ -587,11 +587,11 @@ plotFoldchangeMatrix <- function(x,design, geneClusters=NULL,show_rownames=F,col
 #'
 #' @export
 plotListClusters <- function(degs, categories, e, design, splitBy=NULL, plotEnrichment=TRUE, showOnlyTopCluster=FALSE, absFC=FALSE, useSpecificDEGs=TRUE, doCluster=TRUE, forceClusterNb=NULL, ...){
-  
+
   if(!all(row.names(design)==colnames(e))){
     warning("WARNING: the row.names of `design` doesn't match the colnames of `e`! We are assuming that they correspond, but double-check!")
   }
-  
+
   if(is.null(splitBy)){
     if(!("ex2" %in% colnames(design))){
       design$ex2 <- paste(design$type, design$mix)
@@ -599,11 +599,11 @@ plotListClusters <- function(degs, categories, e, design, splitBy=NULL, plotEnri
   }else{
     design[["ex2"]] <- design[[splitBy]]
   }
-  
+
   if(!is.list(degs)) stop("`degs` should be a list of vectors.")
-  
+
   udegs <- unique(unlist(degs))
-  
+
   if(length(unique(design$ex2))!=length(degs) || !all(sort(unique(design$ex2))==sort(names(degs)))){
     if(all(names(degs) %in% unique(design$ex2))){
       message("Some systems do not have attached lists of DEGs... these will be ignored.")
@@ -613,19 +613,19 @@ plotListClusters <- function(degs, categories, e, design, splitBy=NULL, plotEnri
     }else{
       stop(paste0("`degs` should either be a character vector or a list; if a list, the names of the elements should match the unique values of `splitBy`, in this case:\n",paste(unique(design$ex2),collapse=", ")))
     }
-    
+
   }
-  
+
   en <- donorm(filterGenes(e[,row.names(design)]))
-  
+
   tested <- row.names(en)
-  
-  categories <- lapply(categories,y=tested, FUN=intersect)	
-  
+
+  categories <- lapply(categories,y=tested, FUN=intersect)
+
   nbsys <- length(unique(design$ex2))
   nbcats <- length(categories)
   exps <- unique(design$ex2)
-  
+
   if(plotEnrichment){
     laym <- matrix(0,nrow=nbcats,ncol=2*nbsys)
     j <- 1
@@ -638,8 +638,8 @@ plotListClusters <- function(degs, categories, e, design, splitBy=NULL, plotEnri
   }else{
     layout(matrix(1:(nbsys*nbcats),nrow=nbcats,ncol=nbsys))
   }
-  
-  
+
+
   probs <- lapply(degs, categories=categories, universe=tested, FUN=function(x, categories, universe){
     sapply(categories,set2=x,universe=universe,FUN=overlap.prob)
   })
@@ -648,9 +648,9 @@ plotListClusters <- function(degs, categories, e, design, splitBy=NULL, plotEnri
     ee[which(ee==0)] <- NA
     return(log2(ee))
   })
-  
+
   xlim <- c(min(log10(unlist(probs))),max(unlist(enrichs),na.rm=T))
-  
+
   for(j in 1:nbsys){
     par(mar=c(3,10,3,2))
     if(plotEnrichment) enrichmentBarplot(enrichs[[j]],probs[[j]],names(categories),xlim=xlim)
@@ -804,7 +804,7 @@ plotGenesClusters <- function(fcmat, design, classification, labels=NULL, showEa
   fcmat <- as.data.frame(t(fcmat[,-1,drop=FALSE]))
   nbConcs <- length(x)
   x <- 1:nbConcs
-  
+
   cs1 <- table(classification)
   w <- which(cs1>=minClusterSize)
   cs <- 1+(10*cs1/sum(cs1))
@@ -817,23 +817,23 @@ plotGenesClusters <- function(fcmat, design, classification, labels=NULL, showEa
   cs <- rev(cs)
   classification <- classification[which(as.character(classification) %in% names(cs))]
   xx <- seq(from=1,to=nbConcs,length.out=nbConcs*interpolate)
-  
+
   fcmat <- as.data.frame(t(apply(fcmat[names(classification),,drop=FALSE],1,x=x,spar=spar,interpolate=interpolate,force0=TRUE,FUN=function(y,x,xx,spar,interpolate,force0){
     .plSmooth(x,y,spar=spar,interpolate=interpolate,force0=force0)$y
   })))
-  
+
   if(is.null(cols))	cols <- getQualitativePalette(length(cs))
   names(cols) <- names(cs)
-  
+
   if(is.null(ylim)) ylim <- .getClustersYlim(fcmat, classification, q=q)
   plot(1,0,col="white",xlim=c(1,nbConcs), xlab=xlab, ylim=ylim,ylab=ylab,xaxt=ifelse(is.null(labels),"s","n"),bty="n",...)
-  
+
   if(showEachGene){
     for(i in 1:nrow(fcmat))	lines(smooth.spline(xx,fcmat[i,],spar=0.1),col=maketrans(cols[classification[row.names(fcmat)[i]]],round(alpha/2)))
   }
-  
+
   abline(h=0,lty="dashed")
-  
+
   for(cc in names(cs)){
     e <- fcmat[names(classification)[which(classification==cc)],,drop=FALSE]
     if(!is.null(q) & nrow(e)>1){
@@ -852,7 +852,7 @@ plotGenesClusters <- function(fcmat, design, classification, labels=NULL, showEa
       text(max(xx),agFun(e[,ncol(e)]),labels=nn,pos=4,col=cols[cc],xpd=T,cex = 0.5)
     }
   }
-  
+
   if(!is.null(labels)){
     axis(1, 1:nbConcs, labels)
   }
@@ -903,7 +903,7 @@ getConsClust <- function(dat, maxClusters=10, method="kmeans", plot=TRUE){
   cc <- as.factor(cc$cluster)
   levels(cc) <- as.character(rank(-1*table(cc),ties.method="random"))
   cc <- as.character(cc)
-  names(cc) <- row.names(dat)	
+  names(cc) <- row.names(dat)
   return(cc)
 }
 
@@ -1038,7 +1038,7 @@ donorm <- function(dataset, method="TMM", returnCPM=FALSE){
   if(method=="geometric"){
     en <- exp(donorm(log(dataset+1),"linear"))
     return(en - min(1,min(en)))
-  }	
+  }
   if(method=="linear"){
     nf <- getLinearNormalizers(dataset)
     return(t(t(dataset)*nf))
@@ -1105,7 +1105,7 @@ getQualitativePalette <- function(nbcolors){
 #' @export
 maketrans <- function (tcol, alpha = 100){
   c <- col2rgb(tcol)
-  rgb(c["red", 1][[1]], c["green", 1][[1]], c["blue", 1][[1]], 
+  rgb(c["red", 1][[1]], c["green", 1][[1]], c["blue", 1][[1]],
       alpha, maxColorValue = 255)
 }
 
@@ -1201,20 +1201,20 @@ sdStrips <- function(a, sampletypes, colors=c(Fetal="#D6D6D6", Ngn2="#BAA5E0", O
   gene <- as.factor(rep(colnames(a),each=nrow(a)))
   stripchart(dat~st+gene, vertical=T, pch=16, method="jitter", jitter=0.3, cex=0.6, col=colors[as.character(unique(st))], xaxt="n", ylab="log(FPKM)", bty="n")
   axis(1, at=(1:ncol(a))*length(unique(st))-length(unique(st))/2, labels=colnames(a), cex.axis=0.8)
-  
+
   m <- aggregate(a,by=list(sampletypes),FUN=mean)
   row.names(m) <- m[,1]
   m <- as.numeric(as.matrix(m[levels(st),levels(gene)]))
   s <- aggregate(a,by=list(sampletypes),FUN=sd)
   row.names(s) <- s[,1]
   s <- as.numeric(as.matrix(s[levels(st),levels(gene)]))
-  
+
   x <- 1:(ncol(a)*length(unique(st)))
   segments(x0=x-errwidth/2,x1=x+errwidth/2,y0=m,y1=m, lty=1, col=colerror, lwd=2)
   arrows(x0=x,x1=x,y0=m-s,y1=m+s, length=0.05, lwd=1, lty="83", code=3, col=colerror, angle=90)
-  
+
   legend(legendLocation, fill=colors, legend=names(colors), bty="n")
-  
+
 }
 
 
@@ -1225,22 +1225,22 @@ sdStrips <- function(a, sampletypes, colors=c(Fetal="#D6D6D6", Ngn2="#BAA5E0", O
 #' @param dea The DEA results table
 #' @param net The network (list of tables with target genes and scores for each TF)
 #' @param CD The colData of the experiment
-#' @param form The formula for differential TF activity (`dta`). Terms must be columns of 
-#' CD. If omitted, dta will not be performed, but TF activity will nevertheless be 
+#' @param form The formula for differential TF activity (`dta`). Terms must be columns of
+#' CD. If omitted, dta will not be performed, but TF activity will nevertheless be
 #' calculated and camera analysis will be performed.
 #' @param test.term The coefficient(s) to test for dta, can be either terms of the formula
 #' or columns of the model matrix, but not a combination of the two.
-#' @param as.is Logical; whether to use the expression values as-is; default FALSE, which 
+#' @param as.is Logical; whether to use the expression values as-is; default FALSE, which
 #' means that gene z-scores are calculated. Set to TRUE if `en` are log-foldchanges.
 #'
 #' @return A list.
 estimateTFactivity <- function(en, dea, net, CD=NULL, form=NULL, test.term=NULL, as.is=FALSE){
   if(!as.is) en <- t(scale(t(en)))
-  
+
   gsets <- lapply(net, FUN=function(x){ as.character(x$Target_Gene) })
   cam <- cameraWrapper(dea, gsets)
   row.names(cam) <- sapply(strsplit(as.character(cam$term),":"),FUN=function(x) x[3])
-  
+
   tfa <- t(sapply(net, FUN=function(x){
     row.names(x) <- x$Target_Gene
     i <- intersect(row.names(x), row.names(en))
@@ -1249,7 +1249,7 @@ estimateTFactivity <- function(en, dea, net, CD=NULL, form=NULL, test.term=NULL,
   if(is.null(CD) || is.null(form) || is.null(test.term)){
     return(list( tfa=tfa, camera=cam ))
   }
-  
+
   df <- as.data.frame(CD)[,labels(terms(form)),drop=FALSE]
   df$y <- 1
   form <- reformulate(labels(terms(form)), response="y" )
@@ -1276,7 +1276,7 @@ estimateTFactivity <- function(en, dea, net, CD=NULL, form=NULL, test.term=NULL,
         co2 <- c(co2, PValue=drop1(mod, test.term, test="F")[test.term,'Pr(>F)'])
       }
       co2
-    }, error=function(e){ 
+    }, error=function(e){
       warning(e);
       if(isTestFullterm) return(rep(NA, length(test.term)+1))
       rep(NA, length(test.term)*2)
@@ -1310,7 +1310,7 @@ vipsummary  <- function(mrs, dea, n=50){
 #'
 #' A wrapper around SVA-based correction
 #'
-#' @param SE An object of class `SummarizedExperiment`. Alternatively, a matrix can be 
+#' @param SE An object of class `SummarizedExperiment`. Alternatively, a matrix can be
 #' used, but many options will not be supported.
 #' @param form The formula of the differential expression model
 #' @param form0 An optional formula for the null model
@@ -1320,12 +1320,12 @@ vipsummary  <- function(mrs, dea, n=50){
 #' @param seqb Whether to use the `svaseq` (default FALSE; uses vst+sva)
 #' @param ... Any other param passed to the sva command.
 #'
-#' @return A list with the slots: 
+#' @return A list with the slots:
 #' * `sv`: a table of the surrogate variables
 #' * `cor`: the corrected data (for plotting)
-#' * `mm`: the model.matrix containing, in addition to the specified experimental 
+#' * `mm`: the model.matrix containing, in addition to the specified experimental
 #' variables, all detected surrogate variables.
-#' 
+#'
 #' @export
 svacor <- function(SE, form=NULL, form0=~1, mm=NULL, mm0=NULL, regressOutNull=TRUE, seqb=FALSE, ...){
   library(sva)
@@ -1372,7 +1372,7 @@ svacor <- function(SE, form=NULL, form0=~1, mm=NULL, mm0=NULL, regressOutNull=TR
   H <- solve(t(X)%*%X)%*%t(X)
   b <- (H%*%t(en))
   if(regressOutNull){
-    cn <- setdiff(colnames(X),setdiff(colnames(mm), colnames(mm0)))  
+    cn <- setdiff(colnames(X),setdiff(colnames(mm), colnames(mm0)))
   }else{
     cn <- setdiff(colnames(X),colnames(mm))
   }
@@ -1383,10 +1383,10 @@ svacor <- function(SE, form=NULL, form0=~1, mm=NULL, mm0=NULL, regressOutNull=TR
   return(list(sv=sv, cor=encor, mm=mm2))
 }
 
-getMsigSets <- function(){
+getMsigSets <- function(collections=c("H","C2","C5")){
   library(msigdbr)
   m <- msigdbr(species="Homo sapiens")
-  m <- m[which(m$gs_cat %in% c("H","C2","C5")),]
+  m <- m[which(m$gs_cat %in% collections),]
   m$name2 <- paste0(m$gs_cat,":",m$gs_subcat, ":", m$gs_name)
   split(m$gene_symbol, m$name2)
 }
@@ -1397,22 +1397,22 @@ options("SEtools_def_anno_colors"=ancols)
 
 
 #to be updated
-goseq.enrichment <- function (allGenes, deGenes, gotype = c("GO:BP", "GO:MF", "GO:CC"), 
-                              cutoff = 0.1, cutoff.onFDR = TRUE, org = "hg19", minCatSize = 10, 
-                              maxCatSize = 1000, maxResults = 200) 
+goseq.enrichment <- function (allGenes, deGenes, gotype = c("GO:BP", "GO:MF", "GO:CC"),
+                              cutoff = 0.1, cutoff.onFDR = TRUE, org = "hg19", minCatSize = 10,
+                              maxCatSize = 1000, maxResults = 200)
 {
   suppressPackageStartupMessages(library("goseq"))
   suppressPackageStartupMessages(library("GO.db"))
   suppressPackageStartupMessages(library("org.Hs.eg.db"))
   suppressPackageStartupMessages(library("AnnotationDbi"))
-  gotype <- match.arg(gotype, c("GO:CC", "GO:MF", "GO:BP"), 
+  gotype <- match.arg(gotype, c("GO:CC", "GO:MF", "GO:BP"),
                       several.ok = T)
   org <- match.arg(org, c("hg19", "mm9"))
-  emptyRes <- data.frame(term = vector(mode = "character", 
-                                       length = 0), enrichment = vector(mode = "numeric", length = 0), 
-                         PValue = vector(mode = "numeric", length = 0), FDR = vector(mode = "numeric", 
+  emptyRes <- data.frame(term = vector(mode = "character",
+                                       length = 0), enrichment = vector(mode = "numeric", length = 0),
+                         PValue = vector(mode = "numeric", length = 0), FDR = vector(mode = "numeric",
                                                                                      length = 0), genes = vector(mode = "character", length = 0))
-  if (length(deGenes) < 3) 
+  if (length(deGenes) < 3)
     return(emptyRes)
   if (all(is.na(allGenes))) {
     message("Using all (annotated) genes as a background.")
@@ -1427,16 +1427,16 @@ goseq.enrichment <- function (allGenes, deGenes, gotype = c("GO:BP", "GO:MF", "G
   genes <- as.integer(allGenes %in% as.character(deGenes))
   names(genes) <- allGenes
   pwf = nullp(genes, org, "geneSymbol", plot.fit = F)
-  go.all <- suppressMessages(goseq(pwf, org, "geneSymbol", 
+  go.all <- suppressMessages(goseq(pwf, org, "geneSymbol",
                                    test.cats = gotype))
-  go.all <- go.all[which(go.all$numInCat >= minCatSize & go.all$numInCat < 
+  go.all <- go.all[which(go.all$numInCat >= minCatSize & go.all$numInCat <
                            maxCatSize), ]
   go.all$FDR <- p.adjust(go.all$over_represented_pvalue, method = "BH")
   if (cutoff.onFDR) {
     go.en <- go.all[go.all$FDR < cutoff, ]
   }
   else {
-    go.en <- go.all[go.all$over_represented_pvalue < cutoff, 
+    go.en <- go.all[go.all$over_represented_pvalue < cutoff,
                     ]
   }
   go.en <- go.en[order(go.en$over_represented_pvalue), ]
@@ -1450,25 +1450,25 @@ goseq.enrichment <- function (allGenes, deGenes, gotype = c("GO:BP", "GO:MF", "G
   })
   go.en$Expected <- length(deGenes) * (go.en$numInCat/length(allGenes))
   go.en$Enrichment <- go.en$numDEInCat/go.en$Expected
-  go.en <- go.en[, c("category", "Term", "numInCat", "numDEInCat", 
+  go.en <- go.en[, c("category", "Term", "numInCat", "numDEInCat",
                      "Enrichment", "over_represented_pvalue", "FDR")]
-  names(go.en) <- c("GO.ID", "Term", "Annotated", "Significant", 
+  names(go.en) <- c("GO.ID", "Term", "Annotated", "Significant",
                     "Enrichment", "PValue", "FDR")
-  if (!(nrow(go.en) >= 0)) 
+  if (!(nrow(go.en) >= 0))
     return(emptyRes)
-  if (nrow(go.en) > maxResults) 
+  if (nrow(go.en) > maxResults)
     go.en <- go.en[1:maxResults, ]
   species <- ifelse(substr(org, 0, 2) == "hg", "Hs", "Mm")
   db <- paste0("org.", species, ".eg")
   library(package = paste0(db, ".db"), character.only = T)
-  eg <- AnnotationDbi::mget(as.character(go.en$GO.ID), get(paste0(db, 
+  eg <- AnnotationDbi::mget(as.character(go.en$GO.ID), get(paste0(db,
                                                                   "GO2ALLEGS")), ifnotfound = NA)
-  go.en$genes <- sapply(eg, db = db, sig = as.character(deGenes), 
+  go.en$genes <- sapply(eg, db = db, sig = as.character(deGenes),
                         FUN = function(x, db, sig) {
                           x <- x[which(!is.na(x))]
-                          if (length(x) == 0) 
+                          if (length(x) == 0)
                             return("")
-                          x <- unique(as.character(unlist(AnnotationDbi::mget(as.character(x), 
+                          x <- unique(as.character(unlist(AnnotationDbi::mget(as.character(x),
                                                                               get(paste0(db, "SYMBOL"))))))
                           x <- intersect(x, sig)
                           paste(sort(x), collapse = ", ")
@@ -1529,7 +1529,7 @@ homogenizeDEAresults <- function(x){
   return(x[order(x$FDR),])
 }
 
-byheatmap <- function(x, scale = "none", ...){                                                                                                                                                                                               
+byheatmap <- function(x, scale = "none", ...){
   require("pheatmap")
   scale <- match.arg(scale, c("none", "row", "column"))
   x <- x[which(apply(x, 1, FUN = function(y){
@@ -1537,6 +1537,6 @@ byheatmap <- function(x, scale = "none", ...){
   })), which(apply(x, 2, FUN = function(y) {
     !all(is.na(y))
   }))]
-  pheatmap(x, scale = scale, color = colorRampPalette(c("blue", "black", "yellow"))(29), border_color = NA, ...)                                                                                                                                        
+  pheatmap(x, scale = scale, color = colorRampPalette(c("blue", "black", "yellow"))(29), border_color = NA, ...)
 }
 

@@ -1,5 +1,5 @@
 ---
-title: "1_MixN_Acute"
+title: "MixN_Acute"
 output:
     html_document:
         toc: true

@@ -1,5 +1,5 @@
 ---
-title: "10_HormonalPathways"
+title: "HormonalPathways"
 output:
     html_document:
         toc: true
@@ -34,22 +34,6 @@ load("Data/TotalSumExp.RData", verbose = T)
 ```
 
 
-## Overlap DEGs and hormonal genes
-```{r, message=FALSE,collapse=TRUE, fig.height=6}
-load("Data/HormonalGenes/HormonalGenes.RData",verbose = T)
-load("Data/HormonalGenes/HormonalTFs/TF.RData", verbose = T)
-
-uni <-rownames(filterGenes(Total))
-
-degs.fe <- row.names(DEAs$chronic.fetal)[which((abs(DEAs$chronic.fetal$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.fetal$logFC.EXPO1000X)>0.5) & DEAs$chronic.fetal$FDR<=0.05 & DEAs$chronic.fetal$logCPM>0)]
-degs.org <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.05 & DEAs$chronic.org$logCPM > 0)]
-degs <- list(Fetal=degs.fe, Organoids= degs.org, Both= union(degs.org,degs.fe))
-TF <- list(Fetal=FetTF, Organoids= OrgTF, Both= union(OrgTF,FetTF))
-hormonal <- list(Thyroid=Thyroid, Androgen=Androgen, Estrogen=Estrogen, Corticoid=Corticoid,Progesterone=Progesterone,PPAR=PPAR, Retinoic=Retinoic, All= union(Thyroid,union(Androgen, union(Estrogen,union(Corticoid, union(Progesterone,union(PPAR,Retinoic)))))))
-
-m <- overlapper::multintersect(degs, hormonal, universe = uni)
-overlapper::dotplot.multintersect(m)
-```
 
 ## Overlap DEGs long list and hormonal genes
 ```{r, message=FALSE,collapse=TRUE, fig.height=6}
@@ -70,6 +54,7 @@ overlapper::dotplot.multintersect(m)
 
 
 ## Overlap TFs and hormonal genes
+
 ```{r, message=FALSE,collapse=TRUE,fig.height=6}
 load("Data/regulon_weighted.RData", verbose = T)
 uni <- as.character(names(regulon))
@@ -77,55 +62,62 @@ m <- overlapper::multintersect(TF, hormonal, universe = uni)
 overlapper::dotplot.multintersect(m)
 ```
 
+
+
 ## Heatmaps of hormonal DEGs
 ```{r, message=FALSE,collapse=TRUE}
-SEs <- list(chronic.org=SEs$chronic.org, chronic.fetal=SEs$chronic.fetal)
-merged <- mergeSEs(SEs, use.assays = "corrected", commonOnly=T)
-merged <- merged[,which(merged$EXPO=="CNT"|merged$EXPO=="1X" | merged$EXPO=="1000X")]
+SEs$chronic.org <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X")]
+SEs$chronic.fetal <- SEs$chronic.fetal[,which(SEs$chronic.fetal$EXPO=="CNT"|SEs$chronic.fetal$EXPO=="1X" | SEs$chronic.fetal$EXPO=="1000X")]
 
-load("Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData", verbose = T)
+SEs <- list(chronic.org=SEs$chronic.org, chronic.fetal=SEs$chronic.fetal)
+
+merged <- mergeSEs(SEs, use.assays = "corrected", commonOnly=T)
+
 HormonalAll <- union(Thyroid,union(Androgen, union(Estrogen,union(Corticoid, union(Progesterone,union(PPAR,Retinoic))))))
 degs<- union(degs.fe,degs.org)
 TF<- union(FetTF,OrgTF)
 
-breaks <- c(-8,-3,seq(from=-2.5,to=2.5,length.out=24),3,8)
-sehm(merged, intersect(degs,HormonalAll), gaps_at = "Dataset",  show_rownames = F, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Hormonal DEGs",cluster_rows = T)
+crossHm(SEs, genes = intersect(degs,HormonalAll), do.scale = T,assayName = "corrected",  show_rownames = F, anno_columns = c("EXPO2"), name = "Endocrine Relevant DEGs")
 
-sehm(merged, ThyroidDEGs, gaps_at = "Dataset",  show_rownames = F, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Thyroid genes",cluster_rows = T)
+load("Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData", verbose = T)
 
-sehm(merged, AndrogenDEGs, gaps_at = "Dataset",  show_rownames = F, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Androgen genes",cluster_rows = T)
+crossHm(SEs, genes = ThyroidDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Thyroid DEGs")
 
-sehm(merged, EstrogenDEGs, gaps_at = "Dataset",  show_rownames = F, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Estrogen genes",cluster_rows = T)
+crossHm(SEs, genes = AndrogenDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Androgen DEGs")
 
-sehm(merged, CorticoidDEGs, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Corticoid genes",cluster_rows = T)
+crossHm(SEs, genes = EstrogenDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Estrogen DEGs")
 
-sehm(merged, PPARDEGs, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="PPAR genes",cluster_rows = T)
+crossHm(SEs, genes = CorticoidDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Corticoid DEGs")
 
-sehm(merged, ProgesteroneDEGs, gaps_at = "Dataset",  show_rownames = F, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Progesteron genes",cluster_rows = T)
+crossHm(SEs, genes = PPARDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "PPAR DEGs")
 
-sehm(merged, RetinoicDEGs, gaps_at = "Dataset",  show_rownames = F, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Retinoic Acid genes",cluster_rows = T)
+crossHm(SEs, genes = ProgesteroneDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Progesterone DEGs")
+
+crossHm(SEs, genes = RetinoicDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Retinoic DEGs")
+
 ```
 
 ## Heatmaps of hormonal Psychencode Transciprion Factors
 ```{r, message=FALSE,collapse=TRUE}
 load("Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData", verbose = T)
 
-breaks <- c(-8,-3,seq(from=-2.5,to=2.5,length.out=24),3,8)
-sehm(merged, intersect(TF,HormonalAll), gaps_at = "Dataset",  show_rownames = F, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Hormonal TF",cluster_rows = T)
 
-sehm(merged, ThyroidTF, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Thyroid genes",cluster_rows = T)
+crossHm(SEs, genes = intersect(TF,HormonalAll), do.scale = T,assayName = "corrected",  show_rownames = F, anno_columns = c("EXPO2"), name = "Endocrine Relevant Transcription Factors")
 
-sehm(merged, AndrogenTF, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Androgen genes",cluster_rows = T)
+crossHm(SEs, genes = ThyroidTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Thyroid Transcription Factors")
 
-sehm(merged, EstrogenTF, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Estrogen genes",cluster_rows = T)
+crossHm(SEs, genes = AndrogenTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Androgen Transcription Factors")
 
-sehm(merged, CorticoidTF, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Corticoid genes",cluster_rows = T)
+crossHm(SEs, genes = EstrogenTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Estrogen Transcription Factors")
 
-sehm(merged, PPARTF, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="PPAR genes",cluster_rows = T)
+crossHm(SEs, genes = CorticoidTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Corticoid Transcription Factors")
 
-sehm(merged, ProgesteroneTF, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Progesteron genes",cluster_rows = T)
+crossHm(SEs, genes = PPARTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "PPAR Transcription Factors")
 
-sehm(merged, RetinoicTF, gaps_at = "Dataset",  show_rownames = T, anno_columns = c("Dataset","EXPO2"), breaks = breaks, main="Retinoic Acid genes",cluster_rows = T)
+crossHm(SEs, genes = ProgesteroneTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Progesterone Transcription Factors")
+
+crossHm(SEs, genes = RetinoicTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Retinoic Transcription Factors")
+
 ```
 
 
@@ -137,7 +129,12 @@ For details on the preparation of Hormonal pathways genes, see [here](./DataPrep
 
 ***
 
-To continue with the results you can go [here](12_Immunofluorescence.html)
-
 ```{r child='footer.Rmd'}
 ```
+
+
+
+```{r SaveSession}
+sessionInfo()
+```
+

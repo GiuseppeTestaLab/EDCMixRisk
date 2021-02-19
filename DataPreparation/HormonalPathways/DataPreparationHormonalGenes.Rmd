@@ -46,11 +46,7 @@ Pathways <- as.data.frame(read.csv("FinalTableCompileSignalingPathwaysProject.cs
 ThyroidMouse <- as.data.frame(read.csv("ThryroidMouse.csv",header = T,sep = ';'))
 ThyroidMouse<- as.character(ThyroidMouse$Gene)
 
-#require("biomaRt")
-#human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-#mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
-
-library(biomaRt)
+require("biomaRt")
 human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
 mouse = useMart("ensembl", dataset = "mmusculus_gene_ensembl")
 genesV2 = getLDS(attributes = c("mgi_symbol"), filters = "mgi_symbol", values =  ThyroidMouse, mart = mouse, attributesL = c("hgnc_symbol"), martL = human, uniqueRows=T)
@@ -58,7 +54,13 @@ ThyroidHuman <- unique(genesV2[, 2])
 
 
 degs.fe <- row.names(DEAs$chronic.fetal)[which((abs(DEAs$chronic.fetal$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.fetal$logFC.EXPO1000X)>0.5) & DEAs$chronic.fetal$FDR<=0.05 & DEAs$chronic.fetal$logCPM>0)]
+
+#degs.fe <- row.names(DEAs$chronic.fetal)[which(DEAs$chronic.fetal$FDR<=0.05)]
+
 degs.org <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.05 & DEAs$chronic.org$logCPM > 0)]
+
+#degs.org <- row.names(DEAs$chronic.org)[which(DEAs$chronic.org$FDR<=0.05)]
+
 
 degs <- union(degs.fe, degs.org)
 
@@ -69,6 +71,7 @@ Thyroid <- Thyroid[-grep("ADENOMA",names(Thyroid))]
 Thyroid <- Thyroid[-grep("TUMOR",names(Thyroid))]
 Thyroid <- Thyroid[-grep("PARA",names(Thyroid))]
 Thyroid <- Thyroid[-grep("AUTOIMMUNE",names(Thyroid))]
+Thyroid <- Thyroid[-grep("HPO",names(Thyroid))]
 Thyroid <- union(ThyroidHuman, unlist(Thyroid))
 
 
@@ -77,18 +80,21 @@ write.csv(ThyroidDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/ThyroidDEGs.
 
 Androgen <- gsets[grep("ANDROGEN",names(gsets))]
 Androgen <- Androgen[-grep("CANCER",names(Androgen))]
+Androgen <- Androgen[-grep("HPO",names(Androgen))]
 Androgen2 <- as.character(Pathways$Gene[grep("Androgen",Pathways$Androgen.human.and.mouse)])
 Androgen <- union(Androgen2,(unlist(Androgen)))
 AndrogenDEGs <- intersect(degs, unlist(Androgen))
 write.csv(AndrogenDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/AndrogenDEGs.csv")
 
 Estrogen <- gsets[union(grep("ESTROGEN",names(gsets)),grep("ESTRAD",names(gsets)))]
+Estrogen <- Estrogen[-grep("HPO",names(Estrogen))]
 Estrogen2 <- as.character(Pathways$Gene[grep("Estrogen",Pathways$Estrogen.human.and.mouse.and.rat)])
 Estrogen <- union(Estrogen2,(unlist(Estrogen)))
 EstrogenDEGs <- intersect(degs, unlist(Estrogen))
 write.csv(EstrogenDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/EstrogenDEGs.csv")
 
 Corticoid <- gsets[grep("CORTICO",names(gsets))]
+Corticoid <- Corticoid[-grep("HPO",names(Corticoid))]
 Corticoid <- Corticoid[-grep("NFK",names(Corticoid))]
 Corticoid2 <- as.character(Pathways$Gene[grep("Glucocorticoid",Pathways$Glucocorticoid.human.and.mouse.and.rat)])
 Corticoid <- union(Corticoid2,(unlist(Corticoid)))
@@ -97,6 +103,7 @@ write.csv(CorticoidDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/CorticoidD
 
 PPAR <- gsets[grep("PPAR",names(gsets))]
 PPAR <- PPAR[-grep("PAX8",names(PPAR))]
+PPAR <- PPAR[-grep("HPO",names(PPAR))]
 PPAR2 <- as.character(Pathways$Gene[grep("Peroxi",Pathways$Peroxisome.proliferator.activated.receptor.human.and.mouse.and.rat)])
 PPAR <- union(PPAR2,(unlist(PPAR)))
 PPARDEGs <- intersect(degs, unlist(PPAR))
@@ -104,6 +111,7 @@ write.csv(PPARDEGs,file = "../../Data/HormonalGenes/HormonalDEGs/PPARDEGs.csv")
 
 Progesterone <- gsets[grep("PROGESTER",names(gsets))]
 Progesterone <- Progesterone[-grep("OOCYTE",names(Progesterone))]
+Progesterone <- Progesterone[-grep("HPO",names(Progesterone))]
 Progesterone2 <- as.character(Pathways$Gene[grep("Progesterone",Pathways$Progesterone.receptor.human.and.mouse)])
 Progesterone <- union(Progesterone2,(unlist(Progesterone)))
 ProgesteroneDEGs <- intersect(degs, unlist(Progesterone))
@@ -113,6 +121,7 @@ Retinoic <- gsets[grep("RETINOIC",names(gsets))]
 Retinoic <- Retinoic[-grep("TFA",names(Retinoic))]
 Retinoid <- gsets[grep("RETINOID",names(gsets))]
 Retinoid <- Retinoid[-grep("VISION",names(Retinoid))]
+Retinoid <- Retinoid[-grep("HPO",names(Retinoid))]
 Retinoic$`C5:MF:GO_RETINOID_X_RECEPTOR_BINDING` <- Retinoid$`C5:MF:GO_RETINOID_X_RECEPTOR_BINDING`
 Retinoic2 <- as.character(Pathways$Gene[grep("Retinoic",Pathways$RA.human.and.mouse)])
 Retinoic <- union(Retinoic2,(unlist(Retinoic)))
@@ -162,8 +171,15 @@ Psy<- union(OrgTF,FetTF)
 load("../../Data/AllSEcorrected.RData", verbose = T)
 uni <-rownames(filterGenes(Total))
 SEs <- list(chronic.org=SEs$chronic.org, chronic.fetal=SEs$chronic.fetal)
-degs.fe <- row.names(DEAs$chronic.fetal)[which((abs(DEAs$chronic.fetal$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.fetal$logFC.EXPO1000X)>0.5) & DEAs$chronic.fetal$FDR<=0.1 & DEAs$chronic.fetal$logCPM>0)]
-degs.org <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.1 & DEAs$chronic.org$logCPM>0)]
+
+degs.fe <- row.names(DEAs$chronic.fetal)[which((abs(DEAs$chronic.fetal$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.fetal$logFC.EXPO1000X)>0.5) & DEAs$chronic.fetal$FDR<=0.05 & DEAs$chronic.fetal$logCPM>0)]
+
+#degs.fe <- row.names(DEAs$chronic.fetal)[which(DEAs$chronic.fetal$FDR<=0.05)]
+
+degs.org <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.05 & DEAs$chronic.org$logCPM > 0)]
+
+#degs.org <- row.names(DEAs$chronic.org)[which(DEAs$chronic.org$FDR<=0.05)]
+
 degs <- union(degs.fe, degs.org)
 
 load("../../Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData",verbose = T)

@@ -1,5 +1,5 @@
 ---
-title: "11_Immunofluorescence"
+title: "Immunofluorescence"
 output:
     html_document:
         toc: true
@@ -22,6 +22,8 @@ suppressPackageStartupMessages({
   library(plotly)
   library(dplyr)
   library(sva)
+  library(lme4)
+  library(lmerTest)
 })
 source("Functions/EDC_Functions.R")
 source("Functions/CriFormatted.R")
@@ -131,7 +133,24 @@ geom_jitter(shape=16, position=position_jitter(0.2)) +
 ylab("KI67 positive area / DAPI positive area")
 ```
 
-### plot the ratio between KI67area and DAPIarea
+### Statistical tests
+
+```{r}
+KI$organoid <- gsub("_[0-9]$","",row.names(KI))
+mod <- lmer(log(`Area KI67`)~offset(log(`Area DAPI`))+(1|organoid)+Expo, data=KI)
+coefficients(summary(mod))[-1,]
+```
+
+Pairwise mixed-model tests indicate a significant effect for T3, and a bit for 1X. If we group the controls and MixN:
+
+```{r}
+KI$expo2 <- KI$Expo
+levels(KI$expo2) <- c("CNT","CNT","MixN","MixN", "BPA", "T3")
+mod <- lmer(log(`Area KI67`)~offset(log(`Area DAPI`))+(1|organoid)+expo2, data=KI)
+coefficients(summary(mod))[-1,]
+```
+
+### Dot plots
 
 ```{r,fig.width=10}
 KI$Expo <- factor(KI$Expo, levels=c("CNT","DMSO","MixN1X","MixN1000X","BPA","T3" ))
@@ -139,6 +158,25 @@ KI$Expo <- factor(KI$Expo, levels=c("CNT","DMSO","MixN1X","MixN1000X","BPA","T3"
 SampleColors <- c("CNT"="#0000FF", "DMSO"="#2900D5", "MixN1X"="#7E0080", "MixN1000X"="#FF0000", "BPA"="#117733", "T3"="yellow")
 plot <- ggplot(data=KI, aes(Expo,ratio, fill=Expo))+
     geom_jitter(position=position_dodge(0.6), size=5, pch=21) + 
+    stat_summary(fun.y=mean, fun.ymin=mean, fun.ymax=mean,
+                 geom="crossbar", width=0.5, col='gray35', position=position_dodge(0.6)) + 
+    scale_fill_manual(values=SampleColors) +
+    theme_bw() + xlab('') +
+    theme(plot.title = element_text(face='bold', colour='darkred', size=18, hjust=0.5), 
+          axis.title=element_text(size=14), axis.text=element_text(size=12.5, angle=45, hjust=1)) +
+  ylab("KI67 positive area / DAPI positive area")+
+  xlab("Expo")
+  
+plot
+```
+
+An alternative visualization for nested data:
+
+```{r,fig.width=10}
+ag <- aggregate(KI[,"ratio",drop=FALSE], by=KI[,c("Expo","organoid")], FUN=mean)
+plot <- ggplot(data=KI, aes(Expo,ratio, fill=Expo))+
+    geom_jitter(width = 0.1, height = 0, alpha=0.3) + 
+    geom_jitter(data=ag, width = 0.1, height = 0, size=5, pch=21) + 
     stat_summary(fun.y=mean, fun.ymin=mean, fun.ymax=mean,
                  geom="crossbar", width=0.5, col='gray35', position=position_dodge(0.6)) + 
     scale_fill_manual(values=SampleColors) +
@@ -276,6 +314,15 @@ plot <- ggplot(data=DCX, aes(Expo,ratio, fill=Expo))+
 plot
 ```
 
+### Statistical tests
+
+```{r}
+mod <- lm(log(`Area DCX`)~offset(log(`Area DAPI`))+Expo, data=DCX)
+coefficients(summary(mod))[-1,]
+```
+
+
+
 ### Transcriptomic associated data
 #### Proliferation
 ```{r,fig.width=10}
@@ -300,3 +347,9 @@ geneStripPairEDCMix(SE = Org_chronic,GeneSet = NeuronGenes,printExp = FALSE, Sam
 
 ```{r child='footer.Rmd'}
 ```
+
+
+```{r SaveSession}
+sessionInfo()
+```
+

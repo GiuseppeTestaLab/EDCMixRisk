@@ -362,6 +362,7 @@ __fgsea analysis: ASD genes__
 
 ```{r GseaASD, eval=GseaEval, collapse=TRUE, fig.height=5}
 set.seed(42)
+ASD$SFARI <- as.character(ASD$SFARI) 
 GseaSelASD <- fgsea(FStat, pathways=ASD, nperm=75000, maxSize=500, minSize=10, nproc=1)
 data.table::fwrite(GseaSelASD, file=paste0(OutputFolder, '/Gsea/GseaSelASD.txt'), sep="\t", sep2=c("", " ", ""))
 

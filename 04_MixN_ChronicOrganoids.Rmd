@@ -1,5 +1,5 @@
 ---
-title: "5_MixN_ChronicOrganoids"
+title: "MixN_ChronicOrganoids"
 output:
     html_document:
         toc: true
