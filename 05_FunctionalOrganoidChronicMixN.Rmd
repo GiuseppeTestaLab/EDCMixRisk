@@ -54,7 +54,6 @@ if (dir.exists(paste0(OutputFolder, 'Gsea')) == FALSE) {
 #### 1.2 Libraries and functions
 
 ```{r EnvironmentSetupII, collapse=TRUE}
-#library(EDCMixRisk)
 library(stringr)
 library(DT)
 library(ggplot2)
@@ -76,6 +75,7 @@ options(stringsAsFactors=FALSE)
 
 ```{r SourceFile, collapse=TRUE}
 source('Functions/EDC_Functions.R')
+source('Functions/CriFormatted_OLD.R')
 source('Functions/CriFormatted.R')
 source('Functions/goseq.R')
 ```

@@ -95,7 +95,7 @@ fetal.chronicDown <- row.names(DEAs$chronic.fetal)[which(((DEAs$chronic.fetal$lo
 
 MixN <- list(fetalDEGs=fetal.chronic3, fetalDEGsUp=fetal.chronicUp, fetalDEGsDown=fetal.chronicDown,NonAffectedGenes=controlNeg, random1=random1,random2=random2,random3=random3 )
 
-m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.fetal))
+m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
 #overlapper::dotplot.multintersect(m,sizeRange = c(0,15))
 
 fetal.chronicLong=fetal.chronic3
@@ -117,7 +117,7 @@ m$prob <- round(m$prob, digits=3)
 
 ### SFARI genes
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-m <- overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.fetal))
+m <- overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
@@ -128,7 +128,7 @@ ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicFetal/Dotplo
 
 ### NPD genes
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-m <- overlapper::multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases, universe = row.names(DEAs$chronic.fetal))
+m <- overlapper::multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}

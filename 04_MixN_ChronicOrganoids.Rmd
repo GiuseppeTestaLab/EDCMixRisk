@@ -120,7 +120,7 @@ chronic.orgDown <- row.names(DEAs$chronic.org)[which(((DEAs$chronic.org$logFC.EX
 
 MixN <- list(organoidsDEGs=org.chronic3, organoidsDEGsUp=chronic.orgUp, organoidsDEGsDown=chronic.orgDown,NonAffectedGenes=controlNeg, random1=random1,random2=random2,random3=random3 )
 
-m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.fetal))
+m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.org),two.tailed = F)
 #overlapper::dotplot.multintersect(m,sizeRange = c(0,15))
 
 org.chronicLong<-org.chronic3
@@ -132,7 +132,7 @@ save(org.chronic,org.chronicLong,file = "Data/DEGsOrganoidsChronic.RData")
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
 dotplot.multintersect.mod(m, sizeRange = c(0,15), th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotFetalNDD.pdf', width=10, height=6)
+ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgNDD.pdf', width=10, height=6)
 
 ```
 
@@ -143,24 +143,24 @@ m$prob <- round(m$prob, digits=3)
 
 ### SFARI genes
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-m <- overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.fetal))
+m <- overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.org),two.tailed = F)
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
 dotplot.multintersect.mod(m, th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotFetalSFARI.pdf', width=10, height=6)
+ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgSFARI.pdf', width=10, height=6)
 ```
 
 ### NPD genes
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-m <- overlapper::multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases, universe = row.names(DEAs$chronic.fetal))
+m <- overlapper::multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases, universe = row.names(DEAs$chronic.org),two.tailed = F)
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
 dotplot.multintersect.mod(m, th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotFetalNPD.pdf', width=10, height=6)
+ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgNPD.pdf', width=10, height=6)
 ```
 
 
@@ -272,13 +272,13 @@ load("Data/DEGsOrganoidsChronic.RData", verbose = T)
 
 MixN <- list(OrganoidsDEGs=org.chronic, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronic)
 
-m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
 
 ```
@@ -289,13 +289,13 @@ load("Data/DEGsOrganoidsChronic.RData", verbose = T)
 
 MixN <- list(OrganoidsDEGs=org.chronicLong, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronicLong)
 
-m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)))
+m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect.mod(m, th=0.05)
 
 ```
