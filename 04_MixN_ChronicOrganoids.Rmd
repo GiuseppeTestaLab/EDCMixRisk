@@ -24,8 +24,10 @@ suppressPackageStartupMessages({
   library(sva)
   library(reshape2)
   library(overlapper)
+  library(ggrepel)
 })
 source("Functions/EDC_Functions.R")
+source("Functions/CriFormatted_OLD.R")
 source("Functions/CriFormatted.R")
 load("Data/TotalSumExp.RData")
 load("Data/geneLengths.RData")
@@ -62,21 +64,13 @@ byheatmap(m2,cluster_row=F)
 ```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
 org.chronic <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>0.5 | abs(DEAs$chronic.org$logFC.EXPO1000X)>0.5) & DEAs$chronic.org$FDR<=0.05 & DEAs$chronic.org$logCPM > 0)]
 
-save(org.chronic,file = "Data/DEGsOrganoidsChronic.RData")
-
 MixN_org_chronic <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X")]
 
 sehm(MixN_org_chronic, assayName = "corrected", org.chronic,  do.scale = T, show_rownames = F, anno_columns = c("Line","EXPO2"), main="Chronic org DEGs")
 
 ```
 
-### Most significant and highly disregulated DEGs heatmaps
-```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
-org.chronic2 <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXPO1X)>1 | abs(DEAs$chronic.org$logFC.EXPO1000X)>1) & DEAs$chronic.org$FDR<=0.001 & DEAs$chronic.org$logCPM>0)]
 
-MixN_org_chronic <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X")]
-sehm(MixN_org_chronic, assayName = "corrected", org.chronic2,  do.scale = T, show_rownames = T, anno_columns = c("Line","EXPO2"), main="Chronic org DEGs")
-```
 
 ### 1X vs 1000X
 
@@ -92,10 +86,21 @@ MixN1000X <- DEAs$chronic.org
 MixN1000X$genes <- row.names(MixN1000X)
 MixN1000X$logFC <- (MixN1X$logFC.EXPO1000X)
 
-Comp <- compareResultsFC(MixN1X, MixN1000X, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth = 0, FCceil=8, title='Comparing MixN 1X to 1000X', geneLabel=TRUE)
+#Comp <- compareResultsFC(MixN1X, MixN1000X, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth = 0, FCceil=8, title='Comparing MixN 1X to 1000X', geneLabel=TRUE)
+
+#Comp$Scatter
+```
+
+```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+Comp <- compareResultsFCNew(MixN1X, MixN1000X, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=2.5, 
+                              title='Comparing MixN 1X to 1000X', geneLabel=TRUE, topLab=-16)
 
 Comp$Scatter
+
+ggsave(Comp$Scatter, filename='Data/ChronicOrganoids/Scatter.pdf', width=10, height=10)
+ggsave(Comp$Scatter, filename='Data/ChronicOrganoids/Scatter.png', width=10, height=10)
 ```
+
 
 
 ### Neurodevelopmental Disorder (NDD) Genes 
@@ -103,40 +108,161 @@ Comp$Scatter
 ```{r, message=FALSE,collapse=TRUE, fig.height=6}
 load("Data/ASD.RData", verbose = T)
 org.chronic3 <- row.names(DEAs$chronic.org)[which(DEAs$chronic.org$FDR<=0.05)]
+controlNeg <- row.names(DEAs$chronic.org)[-which(DEAs$chronic.org$FDR<=0.05)]
 
-MixN <- list(OrganoidsDEGsLong=org.chronic3, OrganoidsDEGs=org.chronic)
+random1 <- sample(row.names(DEAs$chronic.org), 10)
+random2 <- sample(row.names(DEAs$chronic.org), 100)
+random3 <- sample(row.names(DEAs$chronic.org), 1000)
+
+chronic.orgUp <- row.names(DEAs$chronic.org)[which(((DEAs$chronic.org$logFC.EXPO1X)>0 & (DEAs$chronic.org$logFC.EXPO1000X)>0) & DEAs$chronic.org$FDR<=0.05)]
+chronic.orgDown <- row.names(DEAs$chronic.org)[which(((DEAs$chronic.org$logFC.EXPO1X)<0 & (DEAs$chronic.org$logFC.EXPO1000X)<0) & DEAs$chronic.org$FDR<=0.05)]
 
 
-m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.org))
-dotplot.multintersect(m,sizeRange = c(0,15))
+MixN <- list(organoidsDEGs=org.chronic3, organoidsDEGsUp=chronic.orgUp, organoidsDEGsDown=chronic.orgDown,NonAffectedGenes=controlNeg, random1=random1,random2=random2,random3=random3 )
 
-m<-overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.org))
-dotplot.multintersect(m)
+m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.fetal))
+#overlapper::dotplot.multintersect(m,sizeRange = c(0,15))
+
+org.chronicLong<-org.chronic3
+save(org.chronic,org.chronicLong,file = "Data/DEGsOrganoidsChronic.RData")
 ```
+
+
+
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+dotplot.multintersect.mod(m, sizeRange = c(0,15), th=0.05)
+
+ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotFetalNDD.pdf', width=10, height=6)
+
+```
+
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+m$prob <- round(m$prob, digits=3)
+#DT::datatable(m$prob)
+```
+
+### SFARI genes
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+m <- overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.fetal))
+```
+
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+dotplot.multintersect.mod(m, th=0.05)
+
+ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotFetalSFARI.pdf', width=10, height=6)
+```
+
+### NPD genes
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+m <- overlapper::multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases, universe = row.names(DEAs$chronic.fetal))
+```
+
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+dotplot.multintersect.mod(m, th=0.05)
+
+ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotFetalNPD.pdf', width=10, height=6)
+```
+
+
+
+### testing a different gene overlapper
+https://bioconductor.org/packages/release/bioc/html/GeneOverlap.html
+
+
+```{r, message=FALSE,collapse=TRUE, fig.height=15,fig.width=15}
+library(GeneOverlap)
+
+gom.obj <- newGOM(MixN,ASD, genome.size=length(row.names(DEAs$chronic.org)))
+print(gom.obj)
+drawHeatmap(gom.obj)
+```
+
+### SFARI genes
+```{r, message=FALSE,collapse=TRUE, fig.height=15,fig.width=15}
+gom.obj <- newGOM(MixN,SFARIgenes, genome.size=length(row.names(DEAs$chronic.org)))
+drawHeatmap(gom.obj)
+```
+
+### NPD genes
+```{r, message=FALSE,collapse=TRUE, fig.height=15,fig.width=15}
+gom.obj <- newGOM(MixN,NeuropsychiatricDiseases, genome.size=length(row.names(DEAs$chronic.org)))
+drawHeatmap(gom.obj)
+```
+
+
+
+
+
+
 
 ### Gene expression dysregulation of the most important NDD genes
 
 ```{r, message=FALSE,collapse=TRUE}
-geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic,SFARIgenes$score1), printExp = FALSE,SampleColors = "Default")
-
-geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic, union(SFARIgenes$score1,SFARIgenes$score2)), printExp = FALSE,SampleColors = "Default")
-
-geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic, union(union(SFARIgenes$score1,SFARIgenes$score2),SFARIgenes$score3)), printExp = FALSE,SampleColors = "Default")
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet =intersect(org.chronic, union(union(SFARIgenes$score1,SFARIgenes$score2),SFARIgenes$score3)), printExp = FALSE, SampleColors = "Default")
 ```
 
-### Gene expression dysregulation of the acute fetal DEGs
-
-```{r, message=FALSE,collapse=TRUE}
-load("Data/DEGsFetalAcute.RData", verbose = T)
-geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(org.chronic, fet.acute), printExp = FALSE,SampleColors = "Default")
+```{r, collapse=TRUE}
+PVals <- DEAs$chronic.org[intersect(org.chronic, unlist(SFARIgenes)),]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
 ```
 
-### Gene expression dysregulation of the chronic fetal NDD-DEGs in the organoids
+ * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
+ * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+
+
+### Gene expression dysregulation of the fetal NDD-DEGs in organoids dataset
 
 ```{r, message=FALSE,collapse=TRUE}
 load("Data/DEGsFetalChronic.RData", verbose = T)
 geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(fetal.chronic, unlist(SFARIgenes)), printExp = FALSE,SampleColors = "Default")
 ```
+
+```{r, collapse=TRUE}
+PVals <- DEAs$chronic.org[intersect(fetal.chronic, unlist(SFARIgenes)),]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+ * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
+ * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+
+
+### Gene expression dysregulation of the genes found in the acute expo
+
+```{r, message=FALSE,collapse=TRUE}
+load("Data/DEGsFetalAcute.RData", verbose = T)
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = intersect(fet.acute,org.chronic), printExp = FALSE,SampleColors = "Default")
+```
+
+```{r, collapse=TRUE}
+PVals <- DEAs$chronic.org[intersect(fet.acute,org.chronic),]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+ * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
+ * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+
+
+```{r, message=FALSE,collapse=TRUE}
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet = c("CLSTN2", "EPHB2"), printExp = FALSE,SampleColors = "Default")
+```
+
+```{r, collapse=TRUE}
+PVals <- DEAs$chronic.org[c("CLSTN2", "EPHB2"),]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+
+ * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
+ * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+
 
 ### Comparison across systems 
 
@@ -147,11 +273,31 @@ load("Data/DEGsOrganoidsChronic.RData", verbose = T)
 MixN <- list(OrganoidsDEGs=org.chronic, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronic)
 
 m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)))
-dotplot.multintersect(m)
+dotplot.multintersect.mod(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)))
-dotplot.multintersect(m)
+dotplot.multintersect.mod(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)))
-dotplot.multintersect(m)
+dotplot.multintersect.mod(m, th=0.05)
+m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)))
+dotplot.multintersect.mod(m, th=0.05)
+
+```
+
+```{r, message=FALSE,collapse=TRUE}
+load("Data/DEGsFetalChronic.RData", verbose = T)
+load("Data/DEGsOrganoidsChronic.RData", verbose = T)
+
+MixN <- list(OrganoidsDEGs=org.chronicLong, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronicLong)
+
+m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)))
+dotplot.multintersect.mod(m, th=0.05)
+m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)))
+dotplot.multintersect.mod(m, th=0.05)
+m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)))
+dotplot.multintersect.mod(m, th=0.05)
+m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)))
+dotplot.multintersect.mod(m, th=0.05)
+
 ```
 
 
