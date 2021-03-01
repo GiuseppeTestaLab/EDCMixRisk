@@ -54,22 +54,31 @@ degs2 <- names(q)[q<0.05]
 ```{r, fig.height=10}
 se <- mergeSEs(SEs[1:2], use.assays="logFC", do.scale = FALSE)
 degs2 <- intersect(degs2,row.names(se))
-# we cluster DEGs by foldchange in the chronic datasets
-lfcs <- prepLFC4clust2(assay(se)[degs2,],groups=paste(se$Dataset,se$EXPO))
-lfcs2 <- lfcs[,grep("T3|BPA",colnames(lfcs),invert=TRUE)]
+se <- se[,se$EXPO %in% c("CNT","1X","1000X")]
+
+# binarize
+b <- sapply(split(seq_len(ncol(se)), paste(se$Dataset, se$EXPO)), FUN=function(i, lfct=0.1){
+  x <- assays(se)$logFC[degs2,i,drop=FALSE]
+  y <- sign(rowMedians(x))*(abs(rowMedians(x))>lfct)
+  w <- apply(sign(x),1,FUN=function(x){
+     max(as.numeric(table(x)))<(0.75*length(x))
+  })
+  y[w] <- y[w]/2
+  y
+})
+row.names(b) <- degs2
 set.seed(1234)
-cl <- clusterWrapper(lfcs2, 2:15, nstart=3)
+cl <- clusterWrapper(b[,grep("CNT",colnames(b),invert=TRUE)], 4:10, nstart=3)
 rowData(se)$cluster <- factor(cl[["8"]]$cluster[row.names(se)])
 cg <- split(names(cl[["8"]]$cluster), cl[["8"]]$cluster)
 
-sehm(se[,grep("T3|BPA",colnames(se),invert=TRUE)], degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F)
+sehm(se, degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F)
 
 # we isolate clusters that are coherent between the two systems
-dc <- list( up.both=cg[[4]],
-			down.both=cg[[7]],
-			org.only=unlist(cg[c(1,2,3,8)]),
-			fetal.only=unlist(cg[c(5,6)])
-			)
+dc <- list( up.both=unlist(cg[6:8]),
+			down.both=cg[[3]],
+			discordant=unlist(cg[c(2,5)]),
+			fetal.only=cg[[1]])
 
 save(dc, file = "Data/DEGsCluster.RData")
 ```
@@ -87,7 +96,7 @@ ag <- aggregate(assays(se)$logFC, by=list(cluster=rowData(se)$cluster), FUN=medi
 row.names(ag) <- ag[,1]
 se.ag <- SummarizedExperiment(list(logFC=ag[,-1]), colData=colData(se))
 h1 <- sechm(se.ag, row.names(se.ag), do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), breaks=1, show_rownames = F, width=unit(5,"cm"), sortRowsOn=NULL, cluster_rows=FALSE, row_title="Clusters", gaps_at="Dataset")
-h1
+#h1
 #m <- t(plotClusterEnrichment(go, returnMatrix=TRUE))
 #colnames(m) <- breakStrings(tolower(gsub("_"," ",colnames(m))))
 #h2 <- Heatmap(m, cluster_rows=FALSE, show_column_dend=FALSE, name="Enrichment")
@@ -95,20 +104,33 @@ h1
 ```
 
 ```{r, fig.height=7, fig.width=10}
-go2 <- goclassify(cg, sets,)
-plot.goclassify(go2, n=16)
+go2 <- goclassify(cg, sets)
+#plot.goclassify(go2, n=16)
 h1 + plot.goclassify(go2, n=16, transpose=TRUE, cluster_rows=FALSE, show_column_dend=FALSE)
 ```
 
 
 
 ## ASD genes
+
 ```{r, fig.width=8, fig.height=8}
 load("Data/ASD.RData")
+psychencode <- readRDS("Data/psychencode.DEGs.rds")
+
 ASD <- lapply(ASD,FUN=function(x) gsub(" ","",x))
 asd.degs <- intersect(unlist(dc[1:2]), unlist(ASD))
-sehm(se[,grep("T3|BPA",colnames(se),invert=TRUE)], asd.degs, do.scale = FALSE, anno_columns = c("EXPO2","Dataset"), toporder = "cluster", show_rownames = TRUE, breaks=0.995, main="ASD-associated consistent DEGs")
+sehm(se, asd.degs, do.scale = FALSE, anno_columns = c("EXPO2","Dataset"), toporder = "cluster", show_rownames = TRUE, breaks=0.995, main="ASD-associated consistent DEGs")
 ```
+
+### GO & ASD enrichments of consistent DEGs
+
+```{r}
+asd.ea <- plEA(row.names(se),unlist(dc[1:2]),sets=c(ASD,psychencode))
+
+go <- goseq.enrichment(row.names(se), unlist(dc[1:2]))
+go[1:10,c(2,4,5,7)]
+```
+
 
 ## Combining also acute exposure:
 
