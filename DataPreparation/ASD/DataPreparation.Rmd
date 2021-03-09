@@ -16,6 +16,7 @@ output:
 SFARI genes were downloaded from https://gene.sfari.org/database/gene-scoring/
 
 ```{r}
+library(tidyverse)
 SFARI <- read.csv("SFARI-Gene_genes_06-20-2019release_07-13-2019export.csv")
 SFARIgenes <- list()
 SFARIgenes$score1 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==1)])
@@ -25,6 +26,8 @@ SFARIgenes$score4 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==4)])
 SFARIgenes$score5 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==5)])
 SFARIgenes$score6 <- as.character(SFARI$gene.symbol[which(SFARI$gene.score==6)])
 SFARIgenesAll<- unique(unlist(SFARIgenes))
+SFARIgenesAll <- str_squish(SFARIgenesAll)
+
 ```
 
 AutismKB genes were downloaded from http://db.cbi.pku.edu.cn/autismkb_v2/index.php
@@ -32,6 +35,8 @@ AutismKB genes were downloaded from http://db.cbi.pku.edu.cn/autismkb_v2/index.p
 AutismKB <- read.table("AutismKB.txt", header = F, sep = "\t")
 colnames(AutismKB) <- c("Gene Symbol",	"Entrez ID",	"Genome-Wide Association Studies",	"CNV/SV Studies",	"Linkage Analyses",	"Low-Scale Genetic Association Studies",	"Expression Profilings",	"NGS de novo Mutation Studies",	"NGS Mosaic Mutation Studies",	"NGS Other Studies",	"Low-Scale Gene Studies",	"total score")
 AutismKBgenes<- unique(as.character(AutismKB$`Gene Symbol`))
+AutismKBgenes <- str_squish(AutismKBgenes)
+
 ```
 
 Decipher genes were downloaded from https://decipher.sanger.ac.uk/about#downloads/data
@@ -39,6 +44,8 @@ Decipher genes were downloaded from https://decipher.sanger.ac.uk/about#download
 Decipher <- read.csv("DDG2P_16_7_2019.csv")
 DecipherNeuro <- Decipher[c(grep("autism", Decipher$disease.name,ignore.case = T),grep("intellectual", Decipher$disease.name,ignore.case = T),grep("neurodevelopm", Decipher$disease.name, ignore.case = T)),]
 DecipherNeurogenes <- unique(as.character(DecipherNeuro$gene.symbol))
+DecipherNeurogenes <- str_squish(DecipherNeurogenes)
+
 ```
 
 MSSNG genes were downloaded from https://www.ncbi.nlm.nih.gov/pubmed/28263302 Supplementary Table 5
@@ -48,12 +55,16 @@ MSSNG <- suppressMessages(read_excel("nn.4524-S7.xlsx"))
 colnames(MSSNG) <- MSSNG[1,]
 MSSNG <- MSSNG[-1,] 
 MSSNGgenes <- unique(as.character(MSSNG$gene_symbol))
+MSSNGgenes <- str_squish(MSSNGgenes)
+
 ```
 
 ASDsevere genes were downloaded from https://www.nature.com/articles/s41436-018-0380-2 Supplementary Table S6
 ```{r}
 ASDsevere <- suppressMessages(read_excel("41436_2018_380_MOESM7_ESM.xlsx"))
 ASDsevereGenes <- unique(as.character(ASDsevere$Gene))
+ASDsevereGenes <- str_squish(ASDsevereGenes)
+
 ```
 
 ID genes were downloaded from https://www.nature.com/articles/ng.3792 Supplementary Table S2
@@ -62,6 +73,9 @@ ID <- suppressMessages(read_excel("41588_2017_BFng3792_MOESM20_ESM.xlsx"))
 colnames(ID) <- ID[1,]
 ID <- ID[-1,] 
 IDGenes <- unique(as.character(ID$Gene))
+IDGenes <- str_squish(IDGenes)
+
+
 ```
 
 OMIM genes were downloaded from https://www.omim.org/downloads/
@@ -78,10 +92,12 @@ NeuroOmim <- morbidmap[c(grep("autism", morbidmap$Phenotype,ignore.case = T),gre
 NeuroOmimGenes <- as.character(morbidmap$`Gene Symbols`[c(grep("autism", morbidmap$Phenotype,ignore.case = T),grep("intellectual", morbidmap$Phenotype,ignore.case = T),grep("neurodevelopm", morbidmap$Phenotype,ignore.case = T))])
 NeuroOmimGenes <- strsplit(NeuroOmimGenes,split = ',')
 NeuroOmimGenes <- unique(unlist(NeuroOmimGenes))
+NeuroOmimGenes <- str_squish(NeuroOmimGenes)
 
 OmimGenes <- as.character(morbidmap$`Gene Symbols`)
 OmimGenes <- strsplit(OmimGenes,split = ',')
 OmimGenes <- unique(unlist(OmimGenes))
+OmimGenes <- str_squish(OmimGenes)
 ```
 
 GDI indexes were downloaded from http://lab.rockefeller.edu/casanova/GDI
@@ -95,8 +111,14 @@ SingleCellASD genes were downloaded from Supplemntary Data 4 at https://science.
 ```{r}
 scASDgenes <- read_excel("aav8130_Data-S4.xls")
 SingleCellASDgenes <- unique(as.character(scASDgenes$`Gene name`))
+SingleCellASDgenes <- str_squish(SingleCellASDgenes)
+
 NeuronASDgenes<-unique(as.character(scASDgenes$`Gene name`)[which(scASDgenes$`Cell type`=="L2/3")])
+NeuronASDgenes <- str_squish(NeuronASDgenes)
+
 AstrocyteASDgenes<-unique(as.character(scASDgenes$`Gene name`)[which(scASDgenes$`Cell type`=="AST-PP")])
+AstrocyteASDgenes <- str_squish(AstrocyteASDgenes)
+
 ```
 
 iPSYCH consortium is publishing the largest exome sequencing study of autism spectrum disorder (ASD) to date (n=35,584 total samples, 11,986 with ASD). I downloaded the risk genes identified from table S4 of the biorxiv publication at
@@ -105,10 +127,12 @@ https://www.biorxiv.org/content/10.1101/484113v3.supplementary-material
 ```{r}
 iPSYCH <- read_excel("media-5.xlsx", sheet = 3)
 iPSYCHgenes <- unique(as.character(iPSYCH$gene))
+iPSYCHgenes <- str_squish(iPSYCHgenes)
+
 ```
 
 Recent neuropsychiatric diseases-causative genes were downloaded from Extended Data Table 5 of this paper:
-
+https://www.nature.com/articles/s41593-021-00802-y
 
 ```{r}
 table <- read_excel("41593_2021_802_MOESM2_ESM.xlsx", sheet = 5,skip = 2)
@@ -121,13 +145,22 @@ NeuropsychiatricDiseases$Parkinson <- unique(as.character(table$hgnc_symbol...18
 NeuropsychiatricDiseases$PSP_FTD <- unique(as.character(table$hgnc_symbol...22))
 NeuropsychiatricDiseases$Eplilepsy <- unique(as.character(table$hgnc_symbol...26))
 NeuropsychiatricDiseases$All <- unique(as.character(unlist(NeuropsychiatricDiseases)))
+NeuropsychiatricDiseases$All <- str_squish(NeuropsychiatricDiseases$All)
 
+```
+
+PsychencodeNDD genes were downloaded from this paper:
+https://science.sciencemag.org/content/362/6420/eaat8127
+
+```{r}
+PsychencodeNDD <- readRDS("../../Data/psychencode.DEGs.rds")
+PsychencodeASD <- unique(as.character(union(PsychencodeNDD$`psychencode:ASD down`,PsychencodeNDD$`psychencode:ASD up`)))
 ```
 
 I then save all the objects
 ```{r}
-ASD <- list(SFARI=SFARIgenesAll, AutismKB=AutismKBgenes, Decipher=DecipherNeurogenes, MSSNG=MSSNGgenes, iPSYCH=iPSYCHgenes , NeuroOMIM= NeuroOmimGenes, ASDsevere=ASDsevereGenes, ID=IDGenes, SingleCellASD=SingleCellASDgenes, NeuronASD=NeuronASDgenes, AstrocyteASD=AstrocyteASDgenes,NeuropsychiatricDiseases = NeuropsychiatricDiseases$All)
-save(ASD, SFARI, SFARIgenes, AutismKB, DecipherNeuro, MSSNG, ASDsevere, ID, NeuroOmim, iPSYCH, GDI,NeuropsychiatricDiseases, file = "../../Data/ASD.RData")
+ASD <- list(SFARI=SFARIgenesAll,  MSSNG=MSSNGgenes, iPSYCH=iPSYCHgenes ,  ID=IDGenes, SingleCellASD=SingleCellASDgenes, NeuronASD=NeuronASDgenes, AstrocyteASD=AstrocyteASDgenes,NeuropsychiatricDiseasesASD = NeuropsychiatricDiseases$Autism, PsychencodeASD = PsychencodeASD)
+save(ASD, SFARI, SFARIgenes, NeuropsychiatricDiseases, PsychencodeNDD, file = "../../Data/ASD.RData")
 ```
 
 

@@ -75,7 +75,6 @@ options(stringsAsFactors=FALSE)
 
 ```{r SourceFile, collapse=TRUE}
 source('Functions/EDC_Functions.R')
-source('Functions/CriFormatted_OLD.R')
 source('Functions/CriFormatted.R')
 source('Functions/goseq.R')
 ```

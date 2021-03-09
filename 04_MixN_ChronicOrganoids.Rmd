@@ -27,7 +27,6 @@ suppressPackageStartupMessages({
   library(ggrepel)
 })
 source("Functions/EDC_Functions.R")
-source("Functions/CriFormatted_OLD.R")
 source("Functions/CriFormatted.R")
 load("Data/TotalSumExp.RData")
 load("Data/geneLengths.RData")
@@ -57,6 +56,7 @@ for(i in 1:ncol(en)){ m[,i] <- apply(Fetal,2,FUN=function(x){ cor(log(en[,i]+1),
 row.names(m) <- colnames(Fetal)
 colnames(m) <- colnames(en)
 m2 <- m[grep("pcw",row.names(m)),]
+colnames(m2) <- c(rep("Organoids",8), rep("iPSC",5), rep("FetalProgenitors",8))
 byheatmap(m2,cluster_row=F)
 ```
 
@@ -110,18 +110,15 @@ load("Data/ASD.RData", verbose = T)
 org.chronic3 <- row.names(DEAs$chronic.org)[which(DEAs$chronic.org$FDR<=0.05)]
 controlNeg <- row.names(DEAs$chronic.org)[-which(DEAs$chronic.org$FDR<=0.05)]
 
-random1 <- sample(row.names(DEAs$chronic.org), 10)
-random2 <- sample(row.names(DEAs$chronic.org), 100)
-random3 <- sample(row.names(DEAs$chronic.org), 1000)
 
 chronic.orgUp <- row.names(DEAs$chronic.org)[which(((DEAs$chronic.org$logFC.EXPO1X)>0 & (DEAs$chronic.org$logFC.EXPO1000X)>0) & DEAs$chronic.org$FDR<=0.05)]
 chronic.orgDown <- row.names(DEAs$chronic.org)[which(((DEAs$chronic.org$logFC.EXPO1X)<0 & (DEAs$chronic.org$logFC.EXPO1000X)<0) & DEAs$chronic.org$FDR<=0.05)]
 
 
-MixN <- list(organoidsDEGs=org.chronic3, organoidsDEGsUp=chronic.orgUp, organoidsDEGsDown=chronic.orgDown,NonAffectedGenes=controlNeg, random1=random1,random2=random2,random3=random3 )
+#MixN <- list(organoidsDEGs=org.chronic3, organoidsDEGsUp=chronic.orgUp, organoidsDEGsDown=chronic.orgDown,NonAffectedGenes=controlNeg)
+MixN <- list(organoidsDEGs=org.chronic3, NonAffectedGenes=controlNeg)
 
 m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.org),two.tailed = F)
-#overlapper::dotplot.multintersect(m,sizeRange = c(0,15))
 
 org.chronicLong<-org.chronic3
 save(org.chronic,org.chronicLong,file = "Data/DEGsOrganoidsChronic.RData")
@@ -130,9 +127,9 @@ save(org.chronic,org.chronicLong,file = "Data/DEGsOrganoidsChronic.RData")
 
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-dotplot.multintersect.mod(m, sizeRange = c(0,15), th=0.05)
+dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgNDD.pdf', width=10, height=6)
+ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgNDD.pdf', width=10, height=6)
 
 ```
 
@@ -147,9 +144,9 @@ m <- overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgSFARI.pdf', width=10, height=6)
+ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgSFARI.pdf', width=10, height=6)
 ```
 
 ### NPD genes
@@ -158,41 +155,21 @@ m <- overlapper::multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases, univer
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgNPD.pdf', width=10, height=6)
+ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicOrganoids/DotplotOrgNPD.pdf', width=10, height=6)
 ```
 
-
-
-### testing a different gene overlapper
-https://bioconductor.org/packages/release/bioc/html/GeneOverlap.html
-
-
-```{r, message=FALSE,collapse=TRUE, fig.height=15,fig.width=15}
-library(GeneOverlap)
-
-gom.obj <- newGOM(MixN,ASD, genome.size=length(row.names(DEAs$chronic.org)))
-print(gom.obj)
-drawHeatmap(gom.obj)
+### NDD psychencode
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+m <- overlapper::multintersect(ll = MixN, ll2 = PsychencodeNDD, universe = row.names(DEAs$chronic.org),two.tailed = F)
 ```
 
-### SFARI genes
-```{r, message=FALSE,collapse=TRUE, fig.height=15,fig.width=15}
-gom.obj <- newGOM(MixN,SFARIgenes, genome.size=length(row.names(DEAs$chronic.org)))
-drawHeatmap(gom.obj)
+```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
+dotplot.multintersect(m, th=0.05)
+
+ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicFetal/DotplotOrgNDD.pdf', width=10, height=6)
 ```
-
-### NPD genes
-```{r, message=FALSE,collapse=TRUE, fig.height=15,fig.width=15}
-gom.obj <- newGOM(MixN,NeuropsychiatricDiseases, genome.size=length(row.names(DEAs$chronic.org)))
-drawHeatmap(gom.obj)
-```
-
-
-
-
-
 
 
 ### Gene expression dysregulation of the most important NDD genes
@@ -273,13 +250,13 @@ load("Data/DEGsOrganoidsChronic.RData", verbose = T)
 MixN <- list(OrganoidsDEGs=org.chronic, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronic)
 
 m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 
 ```
 
@@ -290,13 +267,13 @@ load("Data/DEGsOrganoidsChronic.RData", verbose = T)
 MixN <- list(OrganoidsDEGs=org.chronicLong, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronicLong)
 
 m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 
 ```
 

@@ -72,13 +72,15 @@ cl <- clusterWrapper(b[,grep("CNT",colnames(b),invert=TRUE)], 4:10, nstart=3)
 rowData(se)$cluster <- factor(cl[["8"]]$cluster[row.names(se)])
 cg <- split(names(cl[["8"]]$cluster), cl[["8"]]$cluster)
 
-sehm(se, degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F)
+sehm(se, degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F,sortRowsOn = F)
 
 # we isolate clusters that are coherent between the two systems
-dc <- list( up.both=unlist(cg[6:8]),
-			down.both=cg[[3]],
-			discordant=unlist(cg[c(2,5)]),
-			fetal.only=cg[[1]])
+dc <- list(concordant=unlist(cg[c(2,3,7,8)]),
+      up.both=unlist(cg[c(3,8)]),
+      down.both=unlist(cg[c(2,7)]),
+			discordant=unlist(cg[c(1)]),
+			only_org=unlist(cg[c(4,6)]),
+			only_fetal=unlist(cg[c(5)]))
 
 save(dc, file = "Data/DEGsCluster.RData")
 ```
@@ -125,10 +127,16 @@ sehm(se, asd.degs, do.scale = FALSE, anno_columns = c("EXPO2","Dataset"), topord
 ### GO & ASD enrichments of consistent DEGs
 
 ```{r}
-asd.ea <- plEA(row.names(se),unlist(dc[1:2]),sets=c(ASD,psychencode))
+consistentDEGs <-unlist(dc[1:2])
+oppositeDEGs <- unlist(dc[3])
+m <- overlapper::multintersect(ll = list(consistentDEGs=consistentDEGs,oppositeDEGs=oppositeDEGs), ll2 = psychencode, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
+
+dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
+
 
 go <- goseq.enrichment(row.names(se), unlist(dc[1:2]))
 go[1:10,c(2,4,5,7)]
+
 ```
 
 
@@ -168,11 +176,15 @@ ggplot(tf.en, aes(enrichment.up, -log10(q.up), size=overlap.up)) + geom_point(al
 Viper-based:
 
 ```{r}
+se <- mergeSEs(SEs[1:2], use.assays="logFC", do.scale = FALSE)
+se <- se[,se$EXPO %in% c("CNT","1X","1000X")]
+
 load("Data/regulon_weighted.RData")
-vi1 <- viper(assays(SEs$chronic.org)$corrected, regulon, verbose=FALSE)
-vi2 <- viper(assays(SEs$chronic.fetal)$corrected, regulon, verbose=FALSE)
+vi1 <- viper(assays(SEs$chronic.org[,SEs$chronic.org$EXPO %in% c("CNT","1X","1000X")])$corrected, regulon, verbose=FALSE)
+vi2 <- viper(assays(SEs$chronic.fetal[,SEs$chronic.fetal$EXPO %in% c("CNT","1X","1000X")])$corrected, regulon, verbose=FALSE)
 i <- intersect(row.names(vi1),row.names(vi2))
 vi <- cbind(vi1[i,], vi2[i,])
+
 se$EXPO <- droplevels(se$EXPO)
 mm <- model.matrix(~se$Dataset+se$EXPO)
 tf.en2 <- topTable(eBayes(lmFit(vi,mm)),coef = c("se$EXPO1X","se$EXPO1000X"), number=Inf)

@@ -105,10 +105,11 @@ I generate vectors for the gene universe, all modulated genes, up-regulated gene
 
 
 ```{r TopGOSetI, collapse=TRUE}
-UniverseGenes <- union(rownames(DEAs$chronic.org),rownames(DEAs$chronic.fetal))
-DEG <- union(dc$up.both,dc$down.both)
-DEGup <- dc$up.both
-DEGdown <- dc$down.both 
+UniverseGenes <- unique(union(rownames(DEAs$chronic.org),rownames(DEAs$chronic.fetal)))
+DEG <- unique(union(dc$up.both,dc$down.both))
+DEGup <- unique(dc$up.both)
+DEGdown <- unique(dc$down.both)
+DEGDiscordant <- unique(union(union(dc$only_org,dc$only_fetal),dc$discordant))
   
 # generation of named vectors in the format required by TopGO
 GeneVectors <- list()
@@ -118,6 +119,8 @@ GeneVectors$DEGenesDown <- factor(as.integer(UniverseGenes%in%DEGdown))
 names(GeneVectors$DEGenesDown) <- UniverseGenes
 GeneVectors$DEGenesUp <- factor(as.integer(UniverseGenes%in%DEGup))
 names(GeneVectors$DEGenesUp) <- UniverseGenes
+GeneVectors$DEGenesDiscordant <- factor(as.integer(UniverseGenes%in%DEGDiscordant))
+names(GeneVectors$DEGenesDiscordant) <- UniverseGenes
 ```
 
 
@@ -127,12 +130,14 @@ Therefore:
  * modulated genes consistent in the 2 systems: __`r table(GeneVectors$DEGenes)['1']`__ genes
  * modulated genes down in the 2 systems:  __`r table(GeneVectors$DEGenesDown)['1']`__  genes of interest
  * modulated genes up in the 2 systems:  __`r table(GeneVectors$DEGenesUp)['1']`__ genes of interest  
+ * modulated genes discordant in the 2 systems:  __`r table(GeneVectors$DEGenesDiscordant)['1']`__ genes of interest  
+ 
 
 
 ```{r TopGOSetII, collapse=TRUE}
 BpEval <- ifelse(params$TopGO=='Yes', TRUE, FALSE)
 # the analysis is not done if the number of DEGs is lower than 2.
-BpEval <- ifelse(table(GeneVectors$DEGenes)['1'] < 2 | is.na(table(GeneVectors$DEGenes)['1']) | table(GeneVectors$DEGenesDown)['1'] < 2 | is.na(table(GeneVectors$DEGenesDown)['1']) | table(GeneVectors$DEGenesUp)['1'] < 2 | is.na(table(GeneVectors$DEGenesUp)['1']), FALSE, BpEval)
+BpEval <- ifelse(table(GeneVectors$DEGenes)['1'] < 2 | is.na(table(GeneVectors$DEGenes)['1']) | table(GeneVectors$DEGenesDown)['1'] < 2 | is.na(table(GeneVectors$DEGenesDown)['1']) | table(GeneVectors$DEGenesUp)['1'] < 2 | is.na(table(GeneVectors$DEGenesUp)['1'])| table(GeneVectors$DEGenesDiscordant)['1'] < 2 | is.na(table(GeneVectors$DEGenesDiscordant)['1']), FALSE, BpEval)
 ```
 
 On the basis of the analysis settings or the number of differentially expressed genes, TopGO analysis __`r ifelse(BpEval==TRUE, 'IS', 'IS NOT')` performed__.
@@ -161,7 +166,7 @@ ResBPAllDown <- topGOResults(Genes=GeneVectors$DEGenesDown, gene2GO=BPannDown, o
 write.table(ResBPAllDown$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsDown.txt'), sep='\t', row.names=FALSE)
 ```
 
-#### Biological Process Analysis for genes up in the 2 systems: `r length(GeneVectors$DEGenesDown[GeneVectors$DEGenesDown==1])` genes
+#### Biological Process Analysis for genes up in the 2 systems: `r length(GeneVectors$DEGenesDown[GeneVectors$DEGenesUp==1])` genes
 
 ```{r, eval=BpEval, collapse=TRUE}
 # I generate a list that contains the association between each gene and the GO terms that are associated to it
@@ -172,12 +177,23 @@ ResBPAllUp <- topGOResults(Genes=GeneVectors$DEGenesUp, gene2GO=BPannUp, ontolog
 write.table(ResBPAllUp$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsUp.txt'), sep='\t', row.names=FALSE)
 ```
 
+#### Biological Process Analysis for genes discordant in the 2 systems: `r length(GeneVectors$DEGenesDown[GeneVectors$DEGenesDiscordant==1])` genes
+
+```{r, eval=BpEval, collapse=TRUE}
+# I generate a list that contains the association between each gene and the GO terms that are associated to it
+BPannDisc <- topGO::annFUN.org(whichOnto="BP", feasibleGenes=names(GeneVectors$DEGenesDiscordant), mapping="org.Hs.eg.db", ID="symbol") %>% inverseList()
+
+# Wrapper function for topGO analysis (see helper file)
+ResBPDisc <- topGOResults(Genes=GeneVectors$DEGenesDiscordant, gene2GO=BPannDisc, ontology='BP', description=NULL, nodeSize=10, algorithm='weight01', statistic='fisher', EnTh=2, PvalTh=0.01, minTerms=10)
+write.table(ResBPDisc$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsDisc.txt'), sep='\t', row.names=FALSE)
+```
+
 
 #### Result visualization: Barplot
 
 ```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
 # the if clauses avoids an error in case there is one empty category
-if(dim(ResBPAllUp$ResSel)[1] > 0 & dim(ResBPAllDown$ResSel)[1] > 0 & dim(ResBPAll$ResSel)[1] > 0){
+if(dim(ResBPAllUp$ResSel)[1] > 0 & dim(ResBPAllDown$ResSel)[1] > 0 & dim(ResBPAll$ResSel)[1] > 0 & dim(ResBPDisc$ResSel)[1] > 0){
 
 TopGOBar <- topGOBarplotAll(TopGOResAll=ResBPAll$ResSel, TopGOResDown=ResBPAllDown$ResSel, TopGOResUp=ResBPAllUp$ResSel, terms=8, pvalTh=0.01, title=NULL)
 
@@ -186,6 +202,16 @@ TopGOBar
 ggsave(filename=paste0(OutputFolder, '/TopGO/Barplot.pdf'), TopGOBar, 
        width=13, height=8)
   }
+```
+```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
+# the if clauses avoids an error in case there is one empty category
+
+TopGOBar <- topGOBarplot(TopGORes=ResBPDisc$ResSel, terms=8, pvalTh=0.01, title=NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotDisc.pdf'), TopGOBar, 
+       width=13, height=8)
 ```
 
 
@@ -200,7 +226,17 @@ Gene ontology enrichment analysis is performed on the sets of genes found from t
 #### GOSeq for genes consistent between the 2 systems
 ```{r, eval=GOSeqEval, collapse=TRUE, fig.width=5, fig.height=5}
 #descreasing the threshold to get an idea of the category
-GOSeq <- goseq.enrichment(names(GeneVectors$DEGenes), names(GeneVectors$DEGenes)[GeneVectors$DEGenes==1], "GO:BP", cutoff=0.3)
+GOSeq <- goseq.enrichment(names(GeneVectors$DEGenes), names(GeneVectors$DEGenes)[GeneVectors$DEGenes==1], "GO:BP", cutoff=0.1)
+#colnames(GOSeq) <- c("GO.ID", "Term", "Annotated", "Significant", "enrichment", "PValue", "FDR", "genes")
+if(dim(GOSeq)[1] > 0) {
+gotr <- goTreemap(GOSeq, removeParents=FALSE)
+} # to avoid errors if no results are found
+```
+
+#### GOSeq for genes discorant between the 2 systems
+```{r, eval=GOSeqEval, collapse=TRUE, fig.width=5, fig.height=5}
+#descreasing the threshold to get an idea of the category
+GOSeq <- goseq.enrichment(names(GeneVectors$DEGenesDiscordant), names(GeneVectors$DEGenesDiscordant)[GeneVectors$DEGenesDiscordant==1], "GO:BP", cutoff=0.1)
 #colnames(GOSeq) <- c("GO.ID", "Term", "Annotated", "Significant", "enrichment", "PValue", "FDR", "genes")
 if(dim(GOSeq)[1] > 0) {
 gotr <- goTreemap(GOSeq, removeParents=FALSE)
@@ -214,7 +250,7 @@ gotr <- goTreemap(GOSeq, removeParents=FALSE)
 
 ```{r, collapse=TRUE}
 UniverseGenes <- union(rownames(DEAs$chronic.org),rownames(DEAs$chronic.fetal))
-DEG <- dc$org.only
+DEG <- dc$only_org
 
 # generation of named vectors in the format required by TopGO
 GeneVectors <- list()
@@ -281,7 +317,7 @@ gotr <- goTreemap(GOSeq, removeParents=FALSE)
 
 ```{r, collapse=TRUE}
 UniverseGenes <- union(rownames(DEAs$chronic.org),rownames(DEAs$chronic.fetal))
-DEG <- dc$fetal.only
+DEG <- dc$only_fetal
 
 # generation of named vectors in the format required by TopGO
 GeneVectors <- list()

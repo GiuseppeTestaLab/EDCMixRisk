@@ -27,7 +27,6 @@ suppressPackageStartupMessages({
   library(ggrepel)
 })
 source("Functions/EDC_Functions.R")
-source("Functions/CriFormatted_OLD.R")
 source("Functions/CriFormatted.R")
 load("Data/AllSEcorrected.RData",verbose=T)
 ```
@@ -81,22 +80,22 @@ ggsave(Comp$Scatter, filename='Data/ChronicFetal/Scatter.png', width=10, height=
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6}
 load("Data/ASD.RData", verbose = T)
-load("Data/MetabGenes.RData", verbose = T)
 
 fetal.chronic3 <- row.names(DEAs$chronic.fetal)[which(DEAs$chronic.fetal$FDR<=0.05)]
 controlNeg <- row.names(DEAs$chronic.fetal)[-which(DEAs$chronic.fetal$FDR<=0.05)]
-random1 <- sample(row.names(DEAs$chronic.fetal), 10)
-random2 <- sample(row.names(DEAs$chronic.fetal), 100)
-random3 <- sample(row.names(DEAs$chronic.fetal), 1000)
+
+#random1 <- sample(row.names(DEAs$chronic.fetal), 10)
+#random2 <- sample(row.names(DEAs$chronic.fetal), 100)
+#random3 <- sample(row.names(DEAs$chronic.fetal), 1000)
 
 fetal.chronicUp <- row.names(DEAs$chronic.fetal)[which(((DEAs$chronic.fetal$logFC.EXPO1X)>0 & (DEAs$chronic.fetal$logFC.EXPO1000X)>0) & DEAs$chronic.fetal$FDR<=0.05)]
 fetal.chronicDown <- row.names(DEAs$chronic.fetal)[which(((DEAs$chronic.fetal$logFC.EXPO1X)<0 & (DEAs$chronic.fetal$logFC.EXPO1000X)<0) & DEAs$chronic.fetal$FDR<=0.05)]
 
 
-MixN <- list(fetalDEGs=fetal.chronic3, fetalDEGsUp=fetal.chronicUp, fetalDEGsDown=fetal.chronicDown,NonAffectedGenes=controlNeg, random1=random1,random2=random2,random3=random3 )
+#MixN <- list(fetalDEGs=fetal.chronic3, fetalDEGsUp=fetal.chronicUp, fetalDEGsDown=fetal.chronicDown,NonAffectedGenes=controlNeg)
+MixN <- list(fetalDEGs=fetal.chronic3, NonAffectedGenes=controlNeg)
 
 m <- overlapper::multintersect(ll = MixN, ll2 = ASD, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
-#overlapper::dotplot.multintersect(m,sizeRange = c(0,15))
 
 fetal.chronicLong=fetal.chronic3
 save(fetal.chronic,fetal.chronicLong,file = "Data/DEGsFetalChronic.RData")
@@ -104,65 +103,32 @@ save(fetal.chronic,fetal.chronicLong,file = "Data/DEGsFetalChronic.RData")
 
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-dotplot.multintersect.mod(m, sizeRange = c(0,15), th=0.05)
+dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicFetal/DotplotFetalNDD.pdf', width=10, height=6)
+ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicFetal/DotplotFetalNDD.pdf', width=10, height=6)
 
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
 m$prob <- round(m$prob, digits=3)
-#DT::datatable(m$prob)
+DT::datatable(m$prob)
 ```
 
-### SFARI genes
-```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-m <- overlapper::multintersect(ll = MixN, ll2 = SFARIgenes, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
-```
 
-```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-dotplot.multintersect.mod(m, th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicFetal/DotplotFetalSFARI.pdf', width=10, height=6)
-```
-
-### NPD genes
+### NDD psychencode
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-m <- overlapper::multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
+m <- overlapper::multintersect(ll = MixN, ll2 = PsychencodeNDD, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
 ```
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-dotplot.multintersect.mod(m, th=0.05)
+dotplot.multintersect(m, th=0.05)
 
-ggsave(dotplot.multintersect.mod(m, th=0.05), filename='Data/ChronicFetal/DotplotFetalNPD.pdf', width=10, height=6)
+ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicFetal/DotplotFetalNDD.pdf', width=10, height=6)
 ```
 
 
-### testing a different gene overlapper
-https://bioconductor.org/packages/release/bioc/html/GeneOverlap.html
 
-
-```{r, message=FALSE,collapse=TRUE, fig.height=15,fig.width=15}
-library(GeneOverlap)
-
-gom.obj <- newGOM(MixN,ASD, genome.size=length(row.names(DEAs$chronic.fetal)))
-print(gom.obj)
-drawHeatmap(gom.obj)
-```
-
-### SFARI genes
-```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-gom.obj <- newGOM(MixN,SFARIgenes, genome.size=length(row.names(DEAs$chronic.fetal)))
-#drawHeatmap(gom.obj)
-#no significant overlap
-```
-
-### NPD genes
-```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
-gom.obj <- newGOM(MixN,NeuropsychiatricDiseases, genome.size=length(row.names(DEAs$chronic.fetal)))
-#drawHeatmap(gom.obj)
-#no significant overlap
-```
 
 
 ### Gene expression dysregulation of the most important NDD genes
