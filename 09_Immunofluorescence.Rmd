@@ -327,21 +327,44 @@ coefficients(summary(mod))[-1,]
 #### Proliferation
 ```{r,fig.width=10}
 load("Data/AllSEcorrected.RData", verbose = T)
+load("Data/DEGsOrganoidsChronic.RData",verbose = T)
 Org_chronic <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X" | SEs$chronic.org$EXPO=="BPA0.04X" | SEs$chronic.org$EXPO=="T3")]
-ProlGenes <- c('MKI67','CCNB1', 'CCNB2', 'CDC20', 'CDC20B', 'CDCA8', 'HMGB2')
-geneStripPairEDCMix(SE = Org_chronic,GeneSet = ProlGenes,printExp = FALSE,SampleColors = "Default")
+#ProlGenes <- c('MKI67','CCNB1', 'CCNB2', 'CDC20', 'CDC20B', 'CDCA8', 'HMGB2')
+#geneStripPairEDCMix(SE = Org_chronic,GeneSet = ProlGenes,printExp = FALSE,SampleColors = "Default")
 ProlGenes <- c('MKI67','CCNB1', 'CDC20', 'HMGB2')
 geneStripPairEDCMix(SE = Org_chronic,GeneSet = ProlGenes,printExp = FALSE,SampleColors = "Default")
 ```
 
+```{r, collapse=TRUE}
+PVals <- DEAs$chronic.org[intersect(org.chronic, unlist(ProlGenes)),]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+ * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
+ * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+
+
 #### Neuronal Differentiation
 ```{r,fig.width=10}
 load("Data/AllSEcorrected.RData", verbose = T)
-NeuronGenes <- c('DCX',"SATB2","NEUROG1","SYP","MAP2","RBFOX3","L1CAM")   
-geneStripPairEDCMix(SE = Org_chronic,GeneSet = NeuronGenes,printExp = FALSE, SampleColors = "Default")
+#NeuronGenes <- c('DCX',"SATB2","NEUROG1","SYP","MAP2","RBFOX3","L1CAM")   
+#geneStripPairEDCMix(SE = Org_chronic,GeneSet = NeuronGenes,printExp = FALSE, SampleColors = "Default")
 NeuronGenes <- c('DCX',"SYP","MAP2","RBFOX3")   
 geneStripPairEDCMix(SE = Org_chronic,GeneSet = NeuronGenes,printExp = FALSE, SampleColors = "Default")
 ```
+
+```{r, collapse=TRUE}
+PVals <- DEAs$chronic.org[intersect(org.chronic, unlist(NeuronGenes)),]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+ * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
+ * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+
 
 ***
 
