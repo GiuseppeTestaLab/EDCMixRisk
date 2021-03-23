@@ -44,6 +44,7 @@ sehm(fetal, assayName = "corrected", degs.fe,  do.scale = T, show_rownames = F, 
 
 #### Fetal T3 treated samples respond to T3 known targets and the DEGs are specific for T3 samples
 
+
 ```{r, warning=FALSE, message=FALSE, fig.height=7.5, fig.width=7.5}
 sehm(fetal[,which(SEs$chronic.fetal$EXPO=="CNT" | SEs$chronic.fetal$EXPO=="T3")], assayName = "corrected", Thyroid,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2","MixtureBatch"),  main="T3 target genes")
 
@@ -79,7 +80,6 @@ Contingency <- matrix(c(dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB < 0 ))[
                             dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB >= 0 ))[1]),
                         nrow=2, dimnames=list(c('DownA', 'UpA'), c('DownB', 'UpB')))
 Contingency
-fisher.test(Contingency)
 ```
 
 
@@ -97,7 +97,7 @@ MixN$genes <- row.names(MixN)
 MixN$logFC <- MixN$logFC.EXPO1X
 
 Comp <- compareResultsFCNew(BPA, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=4, 
-                              title='Fetal: Comparing BPA to MixN 1X', geneLabel=TRUE, topLab=-30)
+                              title='Fetal: Comparing BPA to MixN (1X FC)', geneLabel=TRUE, topLab=-30)
 Comp$Scatter
 
 #ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterFetal_MixN_BPA.pdf', width=10, height=10)
@@ -105,6 +105,7 @@ Comp$Scatter
 ```
 
 ### MixN vs single compounds Organoids
+
 #### Organoids MixN DEGs are specific for MixN treated samples
 ```{r, warning=FALSE, message=FALSE}
 Organoids <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X" | SEs$chronic.org$EXPO=="T3"| SEs$chronic.org$EXPO=="BPA0.04X")]
@@ -114,6 +115,8 @@ sehm(Organoids, assayName = "corrected", degs.org,  do.scale = T, show_rownames 
 ```
 
 #### Organoids T3 treated samples respond to T3 known targets and the DEGs are specific for T3 samples
+
+
 ```{r, warning=FALSE, message=FALSE, fig.height=7.5, fig.width=7.5}
 sehm(Organoids[,which(SEs$chronic.org$EXPO=="CNT" | SEs$chronic.org$EXPO=="T3")], assayName = "corrected", Thyroid,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2","MixtureBatch"), main="T3 target genes")
 
@@ -149,11 +152,14 @@ ContingencyII <- matrix(c(dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB < 0 )
                             dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB >= 0 ))[1]),
                         nrow=2, dimnames=list(c('DownA', 'UpA'), c('DownB', 'UpB')))
 ContingencyII
+```
+
+```{r, collapse=TRUE}
 prop.table(ContingencyII)
-fisher.test(ContingencyII)
 
 dplyr::filter(SigBoth, log2FCA < 0 & log2FCB > 0 ) %>% dplyr::pull(genes)
 ```
+
 
 #### Organoids BPA treated samples show specific DEGs
 ```{r, warning=FALSE, message=FALSE, fig.height=7.5, fig.width=7.5}
@@ -172,7 +178,7 @@ MixN$logFC <- MixN$logFC.EXPO1X
 #Comp$Scatter
 
 Comp <- compareResultsFCNew(BPA, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=4, 
-                              title='Organoids: Comparing BPA to MixN 1X', geneLabel=TRUE, topLab=-30)
+                              title='Organoids: Comparing BPA to MixN (1X FC)', geneLabel=TRUE, topLab=-30)
 Comp$Scatter
 
 #ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterOrg_MixN_BPA.pdf', width=10, height=10)
@@ -192,28 +198,7 @@ ContingencyII <- matrix(c(dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB < 0 )
                             dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB >= 0 ))[1]),
                         nrow=2, dimnames=list(c('DownA', 'UpA'), c('DownB', 'UpB')))
 ContingencyII
-prop.table(ContingencyII)
-fisher.test(ContingencyII)
 ```
-
-### Tentative: overlap
-
-N.B. Overlap analyses with the function below are not equivalent to the scatterplots, because here the selection of DEGs for MixN is done with an 'or' approach among the two concentrations for the FC (while above we use MixN 1x FC for BPA and the mean between the two concentrations for T3).
-
-```{r}
-library(overlapper)
-m1 <- overlapper::multintersect(ll=list(fetalDEGs=degs.fe, fetalBPA=degs.fetBPA, fetalT3=degs.fetT3), universe=row.names(DEAs$chronic.fetal), two.tailed = F)
-
-dotplot.multintersect(m1, sizeRange = c(0,15), th=0.05)
-```
-
-
-```{r}
-m2 <- overlapper::multintersect(ll=list(orgDEGs=degs.org, organoidBPA=degs.orgBPA, organoidT3=degs.orgT3), universe=row.names(DEAs$chronic.org),two.tailed = F)
-
-dotplot.multintersect(m2, sizeRange = c(0,15), th=0.05)
-```
-
 
 
 ### Data praparation
