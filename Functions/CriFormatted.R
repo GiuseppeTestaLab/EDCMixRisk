@@ -125,7 +125,7 @@ compareResultsFCNew <- function(resultA, resultB, FDRth=0.05, FCth=2, logCPMth=N
   name2 = deparse(substitute(resultB))
   
   if (is.null(title)) {
-    title = paste0(name1, '_versus_', name2)
+    title = paste('Fold Change: comparison between', name1, 'and', name2)
   } 
   
   
@@ -175,7 +175,7 @@ compareResultsFCNew <- function(resultA, resultB, FDRth=0.05, FCth=2, logCPMth=N
     xlab(paste(name1, "log2FC")) + ylab(paste(name2, "log2FC")) +
     scale_colour_manual(values=c('NotSignificant'="#BEBEBE60", 'SignificantA'=colA,
                                  'SignificantB'=colB, 'SignificantA&B'=colShar)) + 
-    ggtitle(paste('Fold Change: comparison between', name1, 'and', name2)) +
+    ggtitle(title) +
     xlim(-log2(FCceil), log2(FCceil)) + ylim(-log2(FCceil), log2(FCceil)) +
     #scale_y_continuous(limits=c(-log2(FCceil)-1, log2(FCceil))+0.5) +
     #scale_x_continuous(limits=c(-log2(FCceil)-1, log2(FCceil))+0.5) +
