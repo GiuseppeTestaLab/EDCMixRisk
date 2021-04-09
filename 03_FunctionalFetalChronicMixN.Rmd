@@ -82,21 +82,13 @@ source('Functions/goseq.R')
 #### 1.3 Gene sets
 
  * Molecular Signature Database: H1 (hallmark gene sets); KEGG gene sets
- * ASD-related: list containing most relevant ASD or NDD-related genes
- * Metabolism-related
+ 
 
   
 ```{r GeneSets, collapse=TRUE}
 H1 <- gmtPathways('Data/MolecularSignatureDatabase/H/h.all.v7.0.symbols.gmt')
 Kegg <- gmtPathways('Data/MolecularSignatureDatabase/C2/KEGG/c2.cp.kegg.v7.0.symbols.gmt')
 
-load('Data/ASD.RData', verbose=TRUE)
-# remove not useful ones. I keep the gene sets in ASD list
-rm(SFARI, SFARIgenes, AutismKB, DecipherNeuro, 
-   MSSNG, ASDsevere, ID, NeuroOmim, iPSYCH, GDI)
-
-load('Data/MetabGenes.RData', verbose=TRUE)
-MetabGeneSet <- metabolism
 ```
 
 
@@ -155,7 +147,7 @@ Res$table %>%
 
 ### 4. TOPGO for Gene Ontology Enrichment analysis
 
-Gene ontology enrichment analysis is performed on the set of `r dim(dplyr::filter(Res$table, FDR < FDRTh & abs(logFC) > LogFCTh & logCPM >0))[1]` genes using TopGO with Fisher statistics and weight01 algorithm. The division between up-regulated and down-regulated genes is done on the mean FC between the two treatments. 
+Gene ontology enrichment analysis is performed using TopGO with Fisher statistics and weight01 algorithm. The division between up-regulated and down-regulated genes is done on the mean FC between the two treatments. 
 
 #### 4.1 Selection of modulated genes and generation of gene vectors
 
@@ -260,7 +252,7 @@ ggsave(filename=paste0(OutputFolder, '/TopGO/Barplot.pdf'), TopGOBar,
 GOSeqEval <- ifelse(params$GOSeq=='Yes', TRUE, FALSE)
 ```
 
-Gene ontology enrichment analysis is performed on the set of `r dim(dplyr::filter(Res$table, FDR < FDRTh & abs(logFC) > LogFCTh & logCPM >0))[1]` genes using GOSeq approach. On the basis of the analysis settings, GOSeq analysis __`r ifelse(GOSeqEval==TRUE, 'IS', 'IS NOT')` performed__.
+Gene ontology enrichment analysis is performed using GOSeq approach. On the basis of the analysis settings, GOSeq analysis __`r ifelse(GOSeqEval==TRUE, 'IS', 'IS NOT')` performed__.
 
 ```{r GOSeq, eval=GOSeqEval, collapse=TRUE, fig.width=5, fig.height=5}
 GOSeq <- goseq.enrichment(names(GeneVectors$DEGenes), names(GeneVectors$DEGenes)[GeneVectors$DEGenes==1], "GO:BP", cutoff=0.05)
@@ -291,8 +283,7 @@ printTable <- function(x){
 ResCamera <- Res$table %>% dplyr::mutate(StatSign=F*sign(rowMeans(Res$tableRaw[,grep('logFC\\.',colnames(Res$tableRaw))])))
 row.names(ResCamera) <- ResCamera$genes
 
-printTable(cameraWrapper(dea=ResCamera, gsets=NULL, addSets=c(ASD, MetabGeneSet), addDEgenes=TRUE, dea.thres=0.05, minG=5, reportMax=500))
-#printTable(cameraWrapper(dea=ResCamera, gsets=c(H1, Kegg, ASD, MetabGeneSet), addSets=NULL, addDEgenes=TRUE, dea.thres=0.05, minG=5, reportMax=500))
+printTable(cameraWrapper(dea=ResCamera, gsets=NULL, addDEgenes=TRUE, dea.thres=0.05, minG=5, reportMax=500))
 ```
 
 
@@ -358,44 +349,7 @@ plotGseaTable(Kegg[GseaResKegg %>% dplyr::arrange(NES) %>% dplyr::pull(pathway)]
 }
 ```
 
-__fgsea analysis: ASD genes__
 
-```{r GseaASD, eval=GseaEval, collapse=TRUE, fig.height=5}
-set.seed(42)
-#ASD$SFARI <- as.character(ASD$SFARI) 
-GseaSelASD <- fgsea(FStat, pathways=ASD, nperm=75000, maxSize=500, minSize=10, nproc=1)
-data.table::fwrite(GseaSelASD, file=paste0(OutputFolder, '/Gsea/GseaSelASD.txt'), sep="\t", sep2=c("", " ", ""))
-
-GseaResASD <- dplyr::filter(GseaSelASD, padj < 0.1 & abs(NES) > 2) %>% 
-  dplyr::mutate(LEGenes=stringr::str_count(leadingEdge, ",")+1) %>% 
-  dplyr::mutate(GeneSet='ASD') %>% 
-  dplyr::select(1, 2, 3, 5, 9, 10)
-GseaResASD[,1]
-
-if(dim(GseaResASD)[1] > 0){
-plotGseaTable(ASD[GseaResASD %>% dplyr::arrange(NES) %>% dplyr::pull(pathway)], 
-              FStat, GseaSelASD, gseaParam=0.5)
-}
-```
-
-__fgsea analysis: metabolism-related gene sets __
-
-```{r GseaCellTypes, eval=GseaEval, collapse=TRUE, fig.height=5}
-set.seed(42)
-GseaSelMet <- fgsea(FStat, pathways=MetabGeneSet, nperm=75000, maxSize=500, minSize=10, nproc=1)
-data.table::fwrite(GseaSelMet, file=paste0(OutputFolder, '/Gsea/GseaSelMet.txt'), sep="\t", sep2=c("", " ", ""))
-
-GseaResMet <- dplyr::filter(GseaSelMet, padj < 0.1 & abs(NES) > 2) %>% 
-  dplyr::mutate(LEGenes=stringr::str_count(leadingEdge, ",")+1) %>% 
-  dplyr::mutate(GeneSet='Metabolism') %>% 
-  dplyr::select(1, 2, 3, 5, 9, 10)
-GseaResMet[,1]
-
-if(dim(GseaResMet)[1] > 0){
-plotGseaTable(CellTypes[GseaResMet %>% dplyr::arrange(NES) %>% dplyr::pull(pathway)], 
-              FSat, GseaSelCells, gseaParam=0.5)
-}
-```
 
 
 
@@ -403,8 +357,8 @@ plotGseaTable(CellTypes[GseaResMet %>% dplyr::arrange(NES) %>% dplyr::pull(pathw
 #### 7.3 GSEA results visualization
 
 ```{r}
-GseaRes <- rbind(GseaResH1, GseaResKegg, GseaResMet, GseaResASD)
-Cols <- c(H1='#e76bf3', Kegg="#39b600", Metabolism="#e58700", ASD='#00b0f6')
+GseaRes <- rbind(GseaResH1, GseaResKegg)
+Cols <- c(H1='#e76bf3', Kegg="#39b600")
 
 BubbleGsea <- ggplot(GseaRes, aes(x=NES, y=-log10(padj), fill=GeneSet, size=LEGenes)) +
   geom_point(alpha=0.65, shape=21, color='black') + 

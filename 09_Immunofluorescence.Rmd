@@ -324,7 +324,8 @@ coefficients(summary(mod))[-1,]
 
 
 ### Transcriptomic associated data
-#### Proliferation
+
+### Proliferation
 ```{r,fig.width=10}
 load("Data/AllSEcorrected.RData", verbose = T)
 load("Data/DEGsOrganoidsChronic.RData",verbose = T)
@@ -335,18 +336,48 @@ ProlGenes <- c('MKI67','CCNB1', 'CDC20', 'HMGB2')
 geneStripPairEDCMix(SE = Org_chronic,GeneSet = ProlGenes,printExp = FALSE,SampleColors = "Default")
 ```
 
+#### P values for MIX N
+
 ```{r, collapse=TRUE}
-PVals <- DEAs$chronic.org[intersect(org.chronic, unlist(ProlGenes)),]
+PVals <- DEAs$chronic.org[ProlGenes,]
 PVals <- PVals[complete.cases(PVals), ]
 PVals
 ```
 
- * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+* Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+* Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+* Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
+
+#### P values for T3
+
+```{r, collapse=TRUE}
+load("Data/DEAorgSingleCompunds.RData", verbose=TRUE)
+PVals <- res.orgT3[ProlGenes,]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+* Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+* Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+* Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
+
+#### P values for BPA
+
+```{r, collapse=TRUE}
+load("Data/DEAorgSingleCompunds.RData", verbose=TRUE)
+PVals <- res.orgBPA[ProlGenes,]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+* Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+* Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+* Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 
-#### Neuronal Differentiation
+
+### Neuronal Differentiation
+
 ```{r,fig.width=10}
 load("Data/AllSEcorrected.RData", verbose = T)
 #NeuronGenes <- c('DCX',"SATB2","NEUROG1","SYP","MAP2","RBFOX3","L1CAM")   
@@ -355,16 +386,43 @@ NeuronGenes <- c('DCX',"SYP","MAP2","RBFOX3")
 geneStripPairEDCMix(SE = Org_chronic,GeneSet = NeuronGenes,printExp = FALSE, SampleColors = "Default")
 ```
 
+#### P values for MIX N
+
 ```{r, collapse=TRUE}
-PVals <- DEAs$chronic.org[intersect(org.chronic, unlist(NeuronGenes)),]
+PVals <- DEAs$chronic.org[NeuronGenes,]
 PVals <- PVals[complete.cases(PVals), ]
 PVals
 ```
 
- * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+* Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+* Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+* Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
+#### P values for T3
+
+```{r, collapse=TRUE}
+load("Data/DEAorgSingleCompunds.RData", verbose=TRUE)
+PVals <- res.orgT3[NeuronGenes,]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+* Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+* Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+* Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
+
+#### P values for BPA
+
+```{r, collapse=TRUE}
+load("Data/DEAorgSingleCompunds.RData", verbose=TRUE)
+PVals <- res.orgBPA[NeuronGenes,]
+PVals <- PVals[complete.cases(PVals), ]
+PVals
+```
+
+* Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
+* Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+* Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 ***
 

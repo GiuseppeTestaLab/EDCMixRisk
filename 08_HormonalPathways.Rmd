@@ -48,8 +48,8 @@ degs <- list(Fetal=degs.fe, Organoids= degs.org, Both= union(degs.org,degs.fe))
 TF <- list(Fetal=FetTF, Organoids= OrgTF, Both= union(OrgTF,FetTF))
 hormonal <- list(Thyroid=Thyroid, Androgen=Androgen, Estrogen=Estrogen, Corticoid=Corticoid,Progesterone=Progesterone,PPAR=PPAR, Retinoic=Retinoic, All= union(Thyroid,union(Androgen, union(Estrogen,union(Corticoid, union(Progesterone,union(PPAR,Retinoic)))))))
 
-m <- overlapper::multintersect(degs, hormonal, universe = uni)
-overlapper::dotplot.multintersect(m)
+m <- overlapper::multintersect(ll = degs, ll2 = hormonal, universe = uni,two.tailed = F)
+dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
 ```
 
 
@@ -58,8 +58,8 @@ overlapper::dotplot.multintersect(m)
 ```{r, message=FALSE,collapse=TRUE,fig.height=6}
 load("Data/regulon_weighted.RData", verbose = T)
 uni <- as.character(names(regulon))
-m <- overlapper::multintersect(TF, hormonal, universe = uni)
-overlapper::dotplot.multintersect(m)
+m <- overlapper::multintersect(TF, hormonal, universe = uni,two.tailed = F)
+dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
 ```
 
 
@@ -80,18 +80,45 @@ TF<- union(FetTF,OrgTF)
 crossHm(SEs, genes = intersect(degs,HormonalAll), do.scale = T,assayName = "corrected",  show_rownames = F, anno_columns = c("EXPO2"), name = "Endocrine Relevant DEGs")
 
 load("Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData", verbose = T)
+```
 
+#### Heatmaps of Thyroid DEGs
+```{r, message=FALSE,collapse=TRUE}
 crossHm(SEs, genes = ThyroidDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Thyroid DEGs")
+```
+
+#### Heatmaps of Androgen DEGs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = AndrogenDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Androgen DEGs")
+```
+
+#### Heatmaps of Estrogen DEGs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = EstrogenDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Estrogen DEGs")
+```
+
+#### Heatmaps of Corticoid DEGs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = CorticoidDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Corticoid DEGs")
+```
+
+#### Heatmaps of PPAR DEGs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = PPARDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "PPAR DEGs")
+```
+
+#### Heatmaps of Progesterone DEGs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = ProgesteroneDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Progesterone DEGs")
+```
+
+#### Heatmaps of Retinoic DEGs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = RetinoicDEGs, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Retinoic DEGs")
 
@@ -103,18 +130,45 @@ load("Data/HormonalGenes/HormonalTFs/Psychencode/HormonalPsychencode.RData", ver
 
 
 crossHm(SEs, genes = intersect(TF,HormonalAll), do.scale = T,assayName = "corrected",  show_rownames = F, anno_columns = c("EXPO2"), name = "Endocrine Relevant Transcription Factors")
+```
 
+#### Heatmaps of Thyroid TFs
+```{r, message=FALSE,collapse=TRUE}
 crossHm(SEs, genes = ThyroidTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Thyroid Transcription Factors")
+```
+
+#### Heatmaps of Androgen TFs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = AndrogenTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Androgen Transcription Factors")
+```
+
+#### Heatmaps of Estrogen TFs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = EstrogenTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Estrogen Transcription Factors")
+```
+
+#### Heatmaps of Corticoid TFs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = CorticoidTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Corticoid Transcription Factors")
+```
+
+#### Heatmaps of PPAR TFs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = PPARTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "PPAR Transcription Factors")
+```
+
+#### Heatmaps of Progesterone TFs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = ProgesteroneTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Progesterone Transcription Factors")
+```
+
+#### Heatmaps of Retinoic TFs
+```{r, message=FALSE,collapse=TRUE}
 
 crossHm(SEs, genes = RetinoicTF, do.scale = T, assayName = "corrected",show_rownames = F, anno_columns = c("EXPO2"), name = "Retinoic Transcription Factors")
 

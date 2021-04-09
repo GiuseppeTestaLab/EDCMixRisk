@@ -1,6 +1,8 @@
 # From cohorts to molecules: the adverse impact of endocrine disrupting mixtures. Bioinformatic Analysis
 
-The code and the data in this repository enables the reproduction of all the analyses and plots for the transcriptomic data in the paper.
+The code and the data in this repository enables the reproduction of all the analyses and plots for the transcriptomic data in the paper (link doi).
+
+All data are openly available on GEO both in their raw and processed forms [GEO repository](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171566).
 
 You can start from [here](01_MixN_Acute.html)
 

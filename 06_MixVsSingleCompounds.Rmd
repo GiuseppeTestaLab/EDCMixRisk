@@ -22,6 +22,7 @@ suppressPackageStartupMessages({
   library(plotly)
   library(dplyr)
   library(sva)
+  library(ggrepel)
 })
 source("Functions/EDC_Functions.R")
 source("Functions/CriFormatted.R")
@@ -42,7 +43,8 @@ sehm(fetal, assayName = "corrected", degs.fe,  do.scale = T, show_rownames = F, 
 ```
 
 #### Fetal T3 treated samples respond to T3 known targets and the DEGs are specific for T3 samples
-```{r, warning=FALSE, message=FALSE}
+
+```{r, warning=FALSE, message=FALSE, fig.height=7.5, fig.width=7.5}
 sehm(fetal[,which(SEs$chronic.fetal$EXPO=="CNT" | SEs$chronic.fetal$EXPO=="T3")], assayName = "corrected", Thyroid,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2","MixtureBatch"),  main="T3 target genes")
 
 degs.fetT3 <- row.names(res.fetT3)[which(abs(res.fetT3$logFC)> 0.5 & res.fetT3$FDR<=0.05 & res.fetT3$logCPM > 0)]
@@ -56,13 +58,33 @@ MixN <- DEAs$chronic.fetal
 MixN$genes <- row.names(MixN)
 MixN$logFC <- (MixN$logFC.EXPO1X + MixN$logFC.EXPO1000X)/2
 
-Comp <- compareResultsFC(T3, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, FCceil=8,logCPMth = 0, title='Comparing T3 to MixN (mean FC)', geneLabel=TRUE)
-
+Comp <- compareResultsFCNew(T3, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=5, 
+                              title='Fetal: Comparing T3 to MixN (mean FC)', geneLabel=TRUE, topLab=-30)
 Comp$Scatter
+
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterFetal_MixN_T3.pdf', width=10, height=10)
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterFetal_MixN_T3.png', width=10, height=10)
 ```
 
+```{r}
+# Check overlap between MixN and Thyroid
+table(Comp$AllRes$Status)
+
+## Fisher Test Significant
+SigBoth <- dplyr::filter(Comp$Significant, Comp$Significant$Status=='SignificantA&B')
+
+Contingency <- matrix(c(dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB < 0 ))[1], 
+                          dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB < 0 ))[1],
+                           dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB >= 0 ))[1], 
+                            dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB >= 0 ))[1]),
+                        nrow=2, dimnames=list(c('DownA', 'UpA'), c('DownB', 'UpB')))
+Contingency
+fisher.test(Contingency)
+```
+
+
 #### Fetal BPA treated samples show specific DEGs
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, fig.height=7.5, fig.width=7.5}
 degs.fetBPA <- row.names(res.fetBPA)[which(abs(res.fetBPA$logFC)> 0.5 & res.fetBPA$FDR<=0.05 & res.fetBPA$logCPM > 0)]
 
 sehm(fetal, assayName = "corrected", degs.fetBPA,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2","MixtureBatch"), main="BPADEGs")
@@ -74,9 +96,12 @@ MixN <- DEAs$chronic.fetal
 MixN$genes <- row.names(MixN)
 MixN$logFC <- MixN$logFC.EXPO1X
 
-Comp <- compareResultsFC(BPA, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, FCceil=8,logCPMth = 0, title='Comparing BPA to MixN 1X', geneLabel=TRUE)
-
+Comp <- compareResultsFCNew(BPA, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=4, 
+                              title='Fetal: Comparing BPA to MixN 1X', geneLabel=TRUE, topLab=-30)
 Comp$Scatter
+
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterFetal_MixN_BPA.pdf', width=10, height=10)
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterFetal_MixN_BPA.png', width=10, height=10)
 ```
 
 ### MixN vs single compounds Organoids
@@ -89,7 +114,7 @@ sehm(Organoids, assayName = "corrected", degs.org,  do.scale = T, show_rownames 
 ```
 
 #### Organoids T3 treated samples respond to T3 known targets and the DEGs are specific for T3 samples
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, fig.height=7.5, fig.width=7.5}
 sehm(Organoids[,which(SEs$chronic.org$EXPO=="CNT" | SEs$chronic.org$EXPO=="T3")], assayName = "corrected", Thyroid,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2","MixtureBatch"), main="T3 target genes")
 
 
@@ -104,13 +129,34 @@ MixN <- DEAs$chronic.org
 MixN$genes <- row.names(MixN)
 MixN$logFC <- (MixN$logFC.EXPO1X + MixN$logFC.EXPO1000X)/2
 
-Comp <- compareResultsFC(T3, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, FCceil=8,logCPMth = 0, title='Comparing T3 to MixN (mean FC)', geneLabel=TRUE)
-
+Comp <- compareResultsFCNew(T3, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=6, 
+                              title='Comparing T3 to MixN (mean FC)', geneLabel=TRUE, topLab=-40)
 Comp$Scatter
+
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterOrg_MixN_T3.pdf', width=10, height=10)
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterOrg_MixN_T3.png', width=10, height=10)
+```
+
+```{r}
+# Check overlap between MixN and Thyroid
+table(Comp$AllRes$Status)
+
+## Contingency table on shared genes
+SigBoth <- dplyr::filter(Comp$Significant, Comp$Significant$Status=='SignificantA&B')
+ContingencyII <- matrix(c(dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB < 0 ))[1], 
+                          dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB < 0 ))[1],
+                           dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB >= 0 ))[1], 
+                            dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB >= 0 ))[1]),
+                        nrow=2, dimnames=list(c('DownA', 'UpA'), c('DownB', 'UpB')))
+ContingencyII
+prop.table(ContingencyII)
+fisher.test(ContingencyII)
+
+dplyr::filter(SigBoth, log2FCA < 0 & log2FCB > 0 ) %>% dplyr::pull(genes)
 ```
 
 #### Organoids BPA treated samples show specific DEGs
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, fig.height=7.5, fig.width=7.5}
 degs.orgBPA <- row.names(res.orgBPA)[which(abs(res.orgBPA$logFC)> 0.5 & res.orgBPA$FDR<=0.05 & res.orgBPA$logCPM > 0)]
 
 sehm(Organoids, assayName = "corrected", degs.orgBPA,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2","MixtureBatch"),  main="BPADEGs")
@@ -122,10 +168,52 @@ MixN <- DEAs$chronic.org
 MixN$genes <- row.names(MixN)
 MixN$logFC <- MixN$logFC.EXPO1X
 
-Comp <- compareResultsFC(BPA, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, FCceil=8,logCPMth = 0, title='Comparing BPA to MixN 1X', geneLabel=TRUE)
+#Comp <- compareResultsFC(BPA, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, FCceil=8,logCPMth = 0, title='Comparing BPA to MixN 1X', geneLabel=TRUE)
+#Comp$Scatter
 
+Comp <- compareResultsFCNew(BPA, MixN, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=4, 
+                              title='Organoids: Comparing BPA to MixN 1X', geneLabel=TRUE, topLab=-30)
 Comp$Scatter
+
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterOrg_MixN_BPA.pdf', width=10, height=10)
+#ggsave(Comp$Scatter, filename='Data/SingleCompounds/ScatterOrg_MixN_BPA.png', width=10, height=10)
 ```
+
+
+```{r}
+# Check overlap between MixN and BPA
+table(Comp$AllRes$Status)
+
+## Contingency table on shared genes
+SigBoth <- dplyr::filter(Comp$Significant, Comp$Significant$Status=='SignificantA&B')
+ContingencyII <- matrix(c(dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB < 0 ))[1], 
+                          dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB < 0 ))[1],
+                           dim(dplyr::filter(SigBoth, log2FCA < 0 & log2FCB >= 0 ))[1], 
+                            dim(dplyr::filter(SigBoth, log2FCA >= 0 & log2FCB >= 0 ))[1]),
+                        nrow=2, dimnames=list(c('DownA', 'UpA'), c('DownB', 'UpB')))
+ContingencyII
+prop.table(ContingencyII)
+fisher.test(ContingencyII)
+```
+
+### Tentative: overlap
+
+N.B. Overlap analyses with the function below are not equivalent to the scatterplots, because here the selection of DEGs for MixN is done with an 'or' approach among the two concentrations for the FC (while above we use MixN 1x FC for BPA and the mean between the two concentrations for T3).
+
+```{r}
+library(overlapper)
+m1 <- overlapper::multintersect(ll=list(fetalDEGs=degs.fe, fetalBPA=degs.fetBPA, fetalT3=degs.fetT3), universe=row.names(DEAs$chronic.fetal), two.tailed = F)
+
+dotplot.multintersect(m1, sizeRange = c(0,15), th=0.05)
+```
+
+
+```{r}
+m2 <- overlapper::multintersect(ll=list(orgDEGs=degs.org, organoidBPA=degs.orgBPA, organoidT3=degs.orgT3), universe=row.names(DEAs$chronic.org),two.tailed = F)
+
+dotplot.multintersect(m2, sizeRange = c(0,15), th=0.05)
+```
+
 
 
 ### Data praparation

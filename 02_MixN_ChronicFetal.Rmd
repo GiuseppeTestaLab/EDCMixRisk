@@ -56,12 +56,6 @@ MixN1000X <- DEAs$chronic.fetal
 MixN1000X$genes <- row.names(MixN1000X)
 MixN1000X$logFC <- (MixN1X$logFC.EXPO1000X)
 
-#Comp <- compareResultsFC(MixN1X, MixN1000X, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10,logCPMth = 0, FCceil=8, title='Comparing MixN 1X to 1000X', geneLabel=TRUE)
-
-#Comp$Scatter
-
-#ggsave(Comp$Scatter, filename='Data/ChronicFetal/ScatterV1.pdf', width=10, height=10)
-#ggsave(Comp$Scatter, filename='Data/ChronicFetal/ScatterV1.png', width=10, height=10)
 ```
 
 ```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
@@ -108,6 +102,7 @@ dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
 ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicFetal/DotplotFetalNDD.pdf', width=10, height=6)
 
 ```
+#### P values of the overlaps 
 
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
 m$prob <- round(m$prob, digits=3)
@@ -144,8 +139,9 @@ PVals
 ```
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
+ 
 
 
 ### Gene expression dysregulation of the chronic organoids NDD-DEGs in fetal dataset
@@ -162,9 +158,9 @@ PVals
 ```
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
-
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
+ 
 
 ### Gene expression dysregulation of the genes found in the acute expo
 
@@ -180,8 +176,8 @@ PVals
 ```
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 
 ```{r, message=FALSE,collapse=TRUE}
@@ -195,9 +191,8 @@ PVals
 ```
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
-
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 ### Data praparation
 

@@ -174,8 +174,16 @@ ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicFetal/DotplotOrg
 
 ### Gene expression dysregulation of the most important NDD genes
 
-```{r, message=FALSE,collapse=TRUE}
+#### highest scores
+
+```{r, message=FALSE,collapse=TRUE,fig.width=10}
 geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet =intersect(org.chronic, union(union(SFARIgenes$score1,SFARIgenes$score2),SFARIgenes$score3)), printExp = FALSE, SampleColors = "Default")
+```
+
+#### all scores
+
+```{r, message=FALSE,collapse=TRUE,fig.width=15}
+geneStripPairEDCMix(SE = MixN_org_chronic,GeneSet =intersect(org.chronic, unlist(SFARIgenes)), printExp = FALSE, SampleColors = "Default")
 ```
 
 ```{r, collapse=TRUE}
@@ -185,8 +193,8 @@ PVals
 ```
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 
 ### Gene expression dysregulation of the fetal NDD-DEGs in organoids dataset
@@ -203,8 +211,8 @@ PVals
 ```
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 
 ### Gene expression dysregulation of the genes found in the acute expo
@@ -221,8 +229,8 @@ PVals
 ```
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 
 ```{r, message=FALSE,collapse=TRUE}
@@ -237,12 +245,13 @@ PVals
 
 
  * Genes with conventional PVal > 0.05: `r row.names(PVals[PVals$PValue > 0.05,])`
- * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$PValue > 0.01,])`
- * Genes with conventional PVal < 0.01: `r row.names(PVals[PVals$PValue <= 0.01,])`
+ * Genes with conventional PVal < 0.05: `r row.names(PVals[PVals$PValue <= 0.05 & PVals$FDR > 0.05,])`
+ * Genes with conventional FDR < 0.05: `r row.names(PVals[PVals$FDR <= 0.05,])`
 
 
 ### Comparison across systems 
 
+#### more stringent DEGs
 ```{r, message=FALSE,collapse=TRUE}
 load("Data/DEGsFetalChronic.RData", verbose = T)
 load("Data/DEGsOrganoidsChronic.RData", verbose = T)
@@ -251,28 +260,15 @@ MixN <- list(OrganoidsDEGs=org.chronic, FetalAcuteDEGs=fet.acute, FetalChronicDE
 
 m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect(m, th=0.05)
 
 ```
 
-```{r, message=FALSE,collapse=TRUE}
-load("Data/DEGsFetalChronic.RData", verbose = T)
-load("Data/DEGsOrganoidsChronic.RData", verbose = T)
+#### less stringent DEGs
 
+```{r, message=FALSE,collapse=TRUE}
 MixN <- list(OrganoidsDEGs=org.chronicLong, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronicLong)
 
 m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = ASD,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = SFARIgenes,  universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect(m, th=0.05)
-m<-multintersect(ll = MixN, ll2 = NeuropsychiatricDiseases,  universe = row.names(filterGenes(Total)),two.tailed = F)
 dotplot.multintersect(m, th=0.05)
 
 ```

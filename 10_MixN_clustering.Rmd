@@ -115,26 +115,26 @@ h1 + plot.goclassify(go2, n=16, transpose=TRUE, cluster_rows=FALSE, show_column_
 
 ## ASD genes
 
-```{r, fig.width=8, fig.height=8}
+```{r, fig.width=8, fig.height=14}
 load("Data/ASD.RData")
 psychencode <- readRDS("Data/psychencode.DEGs.rds")
 
 ASD <- lapply(ASD,FUN=function(x) gsub(" ","",x))
-asd.degs <- intersect(unlist(dc[1:2]), unlist(ASD))
+asd.degs <- intersect(unlist(dc[1]), unlist(ASD))
 sehm(se, asd.degs, do.scale = FALSE, anno_columns = c("EXPO2","Dataset"), toporder = "cluster", show_rownames = TRUE, breaks=0.995, main="ASD-associated consistent DEGs")
 ```
 
 ### GO & ASD enrichments of consistent DEGs
 
 ```{r}
-consistentDEGs <-unlist(dc[1:2])
-oppositeDEGs <- unlist(dc[3])
+consistentDEGs <-unlist(dc[1])
+oppositeDEGs <- unlist(dc[4])
 m <- overlapper::multintersect(ll = list(consistentDEGs=consistentDEGs,oppositeDEGs=oppositeDEGs), ll2 = psychencode, universe = row.names(DEAs$chronic.fetal),two.tailed = F)
 
 dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
 
 
-go <- goseq.enrichment(row.names(se), unlist(dc[1:2]))
+go <- goseq.enrichment(row.names(se), unlist(dc[1]))
 go[1:10,c(2,4,5,7)]
 
 ```
@@ -142,13 +142,13 @@ go[1:10,c(2,4,5,7)]
 
 ## Combining also acute exposure:
 
-```{r, fig.width=10, fig.height=4}
+```{r, fig.width=12, fig.height=4}
 se2 <- mergeSEs(SEs, use.assays="logFC", do.scale = FALSE)
 sehm(se2[,grep("T3|BPA",colnames(se2),invert=TRUE)], intersect(degs$acute.fetal,degs2), do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), breaks = 0.995, main="DEGs in acute exposure and at least one chronic system")
 ```
 
-```{r, fig.width=10, fig.height=2}
-sehm(se2[,grep("T3|BPA",colnames(se2),invert=TRUE)], intersect(degs$acute.fetal,unlist(dc[1:2])), do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), breaks = 0.99, main=c("Consistent in chronic systems and\naltered upon acute exposure"))
+```{r, fig.width=12, fig.height=3}
+sehm(se2[,grep("T3|BPA",colnames(se2),invert=TRUE)], intersect(degs$acute.fetal,unlist(dc[1])), do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), breaks = 0.99, main=c("Consistent in chronic systems and\naltered upon acute exposure"))
 ```
 
 ### TF target enrichment among consistent DEGs
