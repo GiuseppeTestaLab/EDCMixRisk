@@ -133,9 +133,11 @@ ggsave(dotplot.multintersect(m, th=0.05), filename='Data/ChronicOrganoids/Dotplo
 
 ```
 
+#### P values of the overlaps 
+
 ```{r, message=FALSE,collapse=TRUE, fig.height=6, fig.width=10}
 m$prob <- round(m$prob, digits=3)
-#DT::datatable(m$prob)
+DT::datatable(m$prob)
 ```
 
 ### SFARI genes
