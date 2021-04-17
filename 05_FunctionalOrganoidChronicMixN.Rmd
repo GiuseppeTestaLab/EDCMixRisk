@@ -372,9 +372,9 @@ BubbleGsea
 
 BubbleGsea <- ggplot(GseaRes, aes(x=NES, y=-log10(padj), fill=GeneSet, size=LEGenes)) +
   geom_point(alpha=0.65, shape=21, color='black') + 
-  geom_text_repel(label=GseaRes$pathway, cex=1.8, 
+  geom_text_repel(label=GseaRes$pathway, cex=3.5, 
                   segment.color="grey50", segment.size=0.3,
-                  force=20, nudge_y=-0.15) +
+                  force=20, nudge_y=-0.2,nudge_x=-0.5) +
   geom_vline(xintercept = 0, col='blue') +
   xlab('NES') + ylab('-log10 Adjusted PVal') +
   scale_fill_manual(values=Cols) +

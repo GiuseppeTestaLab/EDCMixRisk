@@ -66,7 +66,7 @@ org.chronic <- row.names(DEAs$chronic.org)[which((abs(DEAs$chronic.org$logFC.EXP
 
 MixN_org_chronic <- SEs$chronic.org[,which(SEs$chronic.org$EXPO=="CNT"|SEs$chronic.org$EXPO=="1X" | SEs$chronic.org$EXPO=="1000X")]
 
-sehm(MixN_org_chronic, assayName = "corrected", org.chronic,  do.scale = T, show_rownames = F, anno_columns = c("Line","EXPO2"), main="Chronic org DEGs")
+sehm(MixN_org_chronic, assayName = "corrected", org.chronic,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2"), main="Chronic org DEGs")
 
 ```
 

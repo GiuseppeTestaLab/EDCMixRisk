@@ -300,7 +300,7 @@ topGOResults <- function(Genes, gene2GO, ontology='BP', description=NULL, nodeSi
 #'
 #' @return A barplot.
 
-topGOBarplot <- function(TopGORes, terms=15, pvalTh=0.01, title=NULL, palette=NULL) {
+topGOBarplot <- function(TopGORes, terms=15, pvalTh=0.01, title=NULL, palette=NULL, fill=1) {
   
   # From RNASeqDEFunctionsGenecode, version 6 February 2019
 
@@ -323,7 +323,23 @@ topGOBarplot <- function(TopGORes, terms=15, pvalTh=0.01, title=NULL, palette=NU
   # 4. x-axis limit definition
   MaxVal <- round(max(-log10(as.numeric(ResOrdered$Statistics)), na.rm=TRUE), 0) +1
   
-  # 4. BarPlot
+  # 4. BarPlot empty
+  if (is.null(fill)){
+    TopGOBarplot <- ggplot(data=ResOrdered, aes(x=GO.ID, y=-log10(as.numeric(Statistics)), fill=GO.ID)) + 
+      geom_bar(stat='identity', aes(alpha=0.75)) +
+      #geom_text(aes(y=0), label=ResOrdered$Term, hjust=0) + 
+      scale_y_continuous(breaks=seq(0,MaxVal,2), labels=abs(seq(0, MaxVal, 2)), limits=c(0,MaxVal), expand=c(0.025, 0.025)) +
+      geom_hline(yintercept=-log10(pvalTh), col='darkred', lty='longdash') +
+      coord_flip() + 
+      scale_fill_manual(values=palette) +
+      ylab('-log10 PValue') + xlab('') +
+      ggtitle(paste('TopGO Enrichment results: ', title)) +
+      theme_bw() +
+      theme(legend.position='none', axis.title.x = element_text(face = 'bold', colour = 'grey30', size=12), 
+            plot.title= element_text(face='bold', colour='darkred', size=12))
+  }
+  else{
+  # 4. BarPlot with text
   TopGOBarplot <- ggplot(data=ResOrdered, aes(x=GO.ID, y=-log10(as.numeric(Statistics)), fill=GO.ID)) + 
     geom_bar(stat='identity', aes(alpha=0.75)) +
     geom_text(aes(y=0), label=ResOrdered$Term, hjust=0) + 
@@ -336,6 +352,7 @@ topGOBarplot <- function(TopGORes, terms=15, pvalTh=0.01, title=NULL, palette=NU
     theme_bw() +
     theme(legend.position='none', axis.title.x = element_text(face = 'bold', colour = 'grey30', size=12), 
           plot.title= element_text(face='bold', colour='darkred', size=12))
+  }
 }
 
 

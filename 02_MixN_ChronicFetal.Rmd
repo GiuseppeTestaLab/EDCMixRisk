@@ -37,7 +37,7 @@ fetal.chronic <- row.names(DEAs$chronic.fetal)[which((abs(DEAs$chronic.fetal$log
 
 
 MixN_fetal_chronic <- SEs$chronic.fetal[,which(SEs$chronic.fetal$EXPO=="CNT"|SEs$chronic.fetal$EXPO=="1X" | SEs$chronic.fetal$EXPO=="1000X")]
-sehm(MixN_fetal_chronic, assayName = "corrected", fetal.chronic,  do.scale = T, show_rownames = F, anno_columns = c("Line","EXPO2"), main="Chronic fetal DEGs")
+sehm(MixN_fetal_chronic, assayName = "corrected", fetal.chronic,  do.scale = T, show_rownames = F, anno_columns = c("EXPO2"), main="Chronic fetal DEGs")
 ```
 
 

@@ -51,7 +51,7 @@ degs2 <- names(q)[q<0.05]
 ```
 
 ## Clusters of gene expression dyregulation between fetal and organoids
-```{r, fig.height=10}
+```{r, fig.height=5}
 se <- mergeSEs(SEs[1:2], use.assays="logFC", do.scale = FALSE)
 degs2 <- intersect(degs2,row.names(se))
 se <- se[,se$EXPO %in% c("CNT","1X","1000X")]
@@ -72,7 +72,17 @@ cl <- clusterWrapper(b[,grep("CNT",colnames(b),invert=TRUE)], 4:10, nstart=3)
 rowData(se)$cluster <- factor(cl[["8"]]$cluster[row.names(se)])
 cg <- split(names(cl[["8"]]$cluster), cl[["8"]]$cluster)
 
-sehm(se, degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F,sortRowsOn = F)
+#cg2<-list()
+#cg2$concordant <- cg[c(2,3,7,8)]
+#cg2$discordant <- cg[c(1,4,6,5)]
+#rowData(se)$cluster2 <-rowData(se)$cluster  
+#rowData(se)$cluster2[which((rowData(se)$cluster==2)|(rowData(se)$cluster==3)|(rowData(se)$cluster==7)|(rowData(se)$cluster==8))] <- 1
+#rowData(se)$cluster2[which((rowData(se)$cluster==1)|(rowData(se)$cluster==4)|(rowData(se)$cluster==6)|(rowData(se)$cluster==5))] <- 2
+
+
+sehm(se, degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster", anno_rows = "cluster", breaks=0.99,show_rownames = F,sortRowsOn = F,gaps_at = "Dataset")
+
+#sehm(se, degs2, do.scale = FALSE, anno_columns = c("Dataset","EXPO2"), toporder = "cluster2", anno_rows = "cluster2", breaks=0.99,show_rownames = F,sortRowsOn = F)
 
 # we isolate clusters that are coherent between the two systems
 dc <- list(concordant=unlist(cg[c(2,3,7,8)]),

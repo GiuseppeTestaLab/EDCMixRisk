@@ -95,7 +95,7 @@ load("Data/DEGsCluster.RData", verbose = T)
 
 ****
 
-### TOPGO for genes consistent between HFPNSC and CO
+### TOPGO for genes consistent and discordant between HFPNSC and CO
 
 Gene ontology enrichment analysis is performed on the sets of genes found from the cluster analysis between fetal and organoids, using TopGO with Fisher statistics and weight01 algorithm. 
 
@@ -189,7 +189,29 @@ write.table(ResBPDisc$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsDisc.
 ```
 
 
-#### Result visualization: Barplot
+#### Result visualization: Barplot for consistent DEGs
+
+```{r, eval=BpEval, collapse=TRUE, fig.height=5, fig.width=4}
+# the if clauses avoids an error in case there is one empty category
+
+TopGOBar <- topGOBarplot(TopGORes=ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL, fill=NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotSingle.pdf'), TopGOBar, 
+       width=13, height=8)
+```
+
+```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
+# the if clauses avoids an error in case there is one empty category
+
+TopGOBar <- topGOBarplot(TopGORes=ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotSingle.pdf'), TopGOBar, 
+       width=13, height=8)
+```
 
 ```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
 # the if clauses avoids an error in case there is one empty category
@@ -203,6 +225,21 @@ ggsave(filename=paste0(OutputFolder, '/TopGO/Barplot.pdf'), TopGOBar,
        width=13, height=8)
   }
 ```
+
+#### Result visualization: Barplot for discordant DEGs
+
+```{r, eval=BpEval, collapse=TRUE, fig.height=5, fig.width=4}
+# the if clauses avoids an error in case there is one empty category
+
+TopGOBar <- topGOBarplot(TopGORes=ResBPDisc$ResSel, terms=8, pvalTh=0.01, title=NULL, fill = NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotDisc.pdf'), TopGOBar, 
+       width=13, height=8)
+```
+
+
 ```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
 # the if clauses avoids an error in case there is one empty category
 
