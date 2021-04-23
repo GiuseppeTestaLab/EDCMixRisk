@@ -91,7 +91,7 @@ MixN1000X$logFC <- (MixN1X$logFC.EXPO1000X)
 #Comp$Scatter
 ```
 
-```{r,message=FALSE,collapse=TRUE, fig.width=10, fig.height=10}
+```{r,message=FALSE,collapse=TRUE, fig.height=7.5, fig.width=7.5}
 Comp <- compareResultsFCNew(MixN1X, MixN1000X, FDRth=0.05, FCth=2^0.5, FDRceil=1e-10, logCPMth=0, FCceil=2.5, 
                               title='Comparing MixN 1X to 1000X', geneLabel=TRUE, topLab=-16)
 
