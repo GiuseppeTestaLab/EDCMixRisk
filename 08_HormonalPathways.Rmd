@@ -56,10 +56,14 @@ dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
 ## Overlap TFs and hormonal genes
 
 ```{r, message=FALSE,collapse=TRUE,fig.height=6}
-load("Data/regulon_weighted.RData", verbose = T)
-uni <- as.character(names(regulon))
+#load("Data/regulon_weighted.RData", verbose = T)
+ag <- readRDS("Data/psychencode_reduced.rds")
+
+col <- c("low"="grey", "high"="yellow")
+#uni <- as.character(names(regulon))
+uni <- as.character(unique(ag$Transcription_Factor))
 m <- overlapper::multintersect(TF, hormonal, universe = uni,two.tailed = F)
-dotplot.multintersect(m, sizeRange = c(0,15), th=0.05)
+dotplot.multintersect(m, sizeRange = c(0,15), th=0.05,colors = col)
 ```
 
 

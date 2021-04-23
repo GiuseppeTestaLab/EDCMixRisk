@@ -259,9 +259,10 @@ load("Data/DEGsFetalChronic.RData", verbose = T)
 load("Data/DEGsOrganoidsChronic.RData", verbose = T)
 
 MixN <- list(OrganoidsDEGs=org.chronic, FetalAcuteDEGs=fet.acute, FetalChronicDEGs=fetal.chronic)
+col <- c("low"="grey", "high"="yellow")
 
 m<-multintersect(ll = MixN, universe = row.names(filterGenes(Total)),two.tailed = F)
-dotplot.multintersect(m, th=0.05)
+dotplot.multintersect(m, th=0.05,colors = col)
 
 ```
 
