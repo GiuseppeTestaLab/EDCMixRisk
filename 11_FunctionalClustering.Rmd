@@ -327,6 +327,18 @@ write.table(ResBPAll$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsOrgano
 
 #### Result visualization: Barplot
 
+```{r, eval=BpEval, collapse=TRUE, fig.height=5, fig.width=4}
+# the if clauses avoids an error in case there is one empty category
+
+TopGOBar <- topGOBarplot(TopGORes =ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL, fill = NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotDisc.pdf'), TopGOBar, 
+       width=13, height=8)
+```
+
+
 ```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
 TopGOBar <- topGOBarplot(TopGORes =ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL)
 
@@ -392,6 +404,19 @@ write.table(ResBPAll$ResAll, file=paste0(OutputFolder, 'TopGO/BPAllResultsHFPNSC
 
 
 #### Result visualization: Barplot
+
+
+```{r, eval=BpEval, collapse=TRUE, fig.height=5, fig.width=4}
+# the if clauses avoids an error in case there is one empty category
+
+TopGOBar <- topGOBarplot(TopGORes =ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL, fill = NULL)
+
+TopGOBar
+
+ggsave(filename=paste0(OutputFolder, '/TopGO/BarplotDisc.pdf'), TopGOBar, 
+       width=13, height=8)
+```
+
 
 ```{r, eval=BpEval, collapse=TRUE, fig.height=8.5, fig.width=16}
 TopGOBar <- topGOBarplot(TopGORes=ResBPAll$ResSel, terms=8, pvalTh=0.01, title=NULL)

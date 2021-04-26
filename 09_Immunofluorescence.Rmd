@@ -141,7 +141,7 @@ mod <- lmer(log(`Area KI67`)~offset(log(`Area DAPI`))+(1|organoid)+Expo, data=KI
 coefficients(summary(mod))[-1,]
 ```
 
-Pairwise mixed-model tests indicate a significant effect for T3, and a bit for 1X. If we group the controls and MixN:
+Pairwise mixed-model tests indicate a significant effect for T3, and for 1X. If we group the controls and MixN:
 
 ```{r}
 KI$expo2 <- KI$Expo
@@ -322,6 +322,13 @@ coefficients(summary(mod))[-1,]
 ```
 
 
+
+```{r}
+DCX$expo2 <- DCX$Expo
+levels(DCX$expo2) <- c("CNT","CNT","MixN","MixN", "BPA", "T3")
+mod <- lm(log(`Area DCX`)~offset(log(`Area DAPI`))+expo2, data=DCX)
+coefficients(summary(mod))[-1,]
+```
 
 ### Transcriptomic associated data
 
