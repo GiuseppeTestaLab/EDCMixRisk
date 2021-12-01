@@ -49,4 +49,3 @@ Giuseppe Testa: giuseppe.testa@ieo.it
 
 Lab: http://www.testalab.eu/ 
 
-'Date: `r format(Sys.Date(), "%B %d, %Y")`'
