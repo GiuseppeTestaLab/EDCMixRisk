@@ -1,0 +1,142 @@
+---
+title: "Dose Response In Vivo data"
+output:
+    html_document:
+        toc: true
+        toc_float: true
+        collapsed: true
+        theme: 'simplex'
+        highlight: 'espresso'
+        code_folding: hide
+---
+
+### Data loading
+
+```{r, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(SummarizedExperiment)
+  library(SEtools)
+  library(edgeR)
+  library(DT)
+  library(pheatmap)
+  library(plotly)
+  library(dplyr)
+  library(sva)
+  library(lme4)
+  library(lmerTest)
+  library(readxl)
+})
+source("Functions/EDC_Functions.R")
+source("Functions/CriFormatted.R")
+source("Functions/dround.R")
+
+```
+
+## Tadpoles
+
+```{r}
+names(concs) <- concs <- c(paste0(c(1,10,100,1000),"X"),"CTRL vs 1X,10X,100X","CTRL vs 1000X")
+e <- bind_rows(lapply(concs, FUN=function(x){
+  x <- read_excel("Data/DoseResponse/summary mobility N0 pool_ML.xlsx", sheet=x)
+  x$Time <- as.numeric(strptime(x$Time, "%H:%M:%S")-strptime("0:00:00", "%H:%M:%S"))
+  x$Light <- rep(rep(factor(c("light","dark")), each=3),nrow(x)/6)
+  reshape2::melt(x[,-2], id.vars=c("Time","Light"), variable.name="Tadpole", value.name="Movement")
+}), .id="Concentration")
+e$Tadpole <- as.factor(e$Tadpole)
+e$Batch <- ifelse(grepl("1000",e$Concentration), "2","1")
+e$Concentration[grep("CTRL",e$Concentration)] <- "CTRL"
+e$Concentration <- relevel(factor(e$Concentration, unique(e$Concentration)), "CTRL")
+# sanity check
+# ag <- aggregate(x=e$Movement, by=e[,c("Time","Concentration")], FUN=mean)
+# ggplot(ag, aes(Time, x, colour=Concentration)) + geom_line()
+```
+
+#### Mixed linear models
+
+```{r}
+mod <- lmer(Movement~(1|Batch)+(1|Tadpole/Concentration)+Time+Light*Concentration, data=e)
+co <- as.data.frame(coef(summary(mod)))[-1:-3,]
+co$FDR <- p.adjust(co[,5])
+colnames(co)[2] <- "StdErr"
+ggplot(cbind(co, coef=row.names(co)), aes(Estimate, coef, colour=-log10(FDR))) + 
+  geom_vline(xintercept=0, linetype="dashed") + geom_point(size=3) + 
+  geom_segment(aes(x=Estimate-StdErr, xend=Estimate+StdErr, y=coef, yend=coef), size=1.3) +
+  geom_text(label=ifelse(co$FDR<0.01,"*",""), size=10, aes(x=Estimate+StdErr+0.025)) +
+  labs(x="Change in movement", y="Coefficient")
+dround(co[,c(1,2,5,6)])
+```
+
+```{r}
+co2 <- co[,c("Estimate","StdErr")]
+co2$cycle <- ifelse(grepl("Light",row.names(co2)),"Light","Dark")
+co2$Conc2 <- gsub("Concentration","",gsub("Lightlight:","",row.names(co2),fixed=TRUE))
+co2 <- rbind(data.frame(Estimate=c(0,0),StdErr=c(0,0),cycle=c("Light","Dark"),Conc2="CTRL"),co2)
+co2$Conc2 <- factor(co2$Conc2, unique(co2$Conc2))
+ggplot(co2, aes(as.integer(Conc2), Estimate, colour=cycle)) + geom_point() +
+  geom_segment(aes(y=Estimate-StdErr,yend=Estimate+StdErr,xend=as.integer(Conc2))) + 
+  geom_smooth(method="lm") + scale_x_continuous(breaks=1:5, labels=levels(co2$Conc2)) +
+  labs(x="Concentration", y="Change in movement")
+```
+
+## Zebrafish
+
+
+```{r}
+names(concs) <- concs <- c("CTRL",paste0(c(0.01,0.1,1,10,100),"X"))
+e <- bind_rows(lapply(concs, FUN=function(x){
+  x <- read_excel("Data/DoseResponse/zebrafish.xlsx", sheet=x)
+  x$Time <- as.numeric(gsub(" min","",x$Time))
+  x$Light <- rep(rep(factor(c("dark","light"), c("light","dark")), each=5),nrow(x)/10)
+  reshape2::melt(x[,-2], id.vars=c("Time","Light"), variable.name="Tadpole", value.name="Movement")
+}), .id="Concentration")
+e$Tadpole <- as.factor(paste(e$Concentration,e$Tadpole))
+e$Concentration <- relevel(factor(e$Concentration, unique(e$Concentration)), "CTRL")
+# sanity check
+ag <- aggregate(x=e$Movement, by=e[,c("Time","Concentration")], FUN=mean)
+ggplot(ag, aes(Time, x, colour=Concentration)) + geom_line() + labs(x="Time (min)", y="Movement")
+```
+
+#### Mixed linear models
+
+```{r}
+mod <- lmer(Movement~(1|Tadpole)+Time+Light*Concentration, data=e)
+co <- as.data.frame(coef(summary(mod)))[-1:-3,]
+co$FDR <- p.adjust(co[,5])
+colnames(co)[2] <- "StdErr"
+co$coef <- factor(row.names(co), unique(row.names(co)))
+levels(co$coef) <- gsub("Concentration","",levels(co$coef))
+levels(co$coef) <- gsub("Lightdark:","Dark+",levels(co$coef))
+ggplot(co, aes(Estimate, coef, colour=-log10(FDR))) + 
+  geom_vline(xintercept=0, linetype="dashed") + geom_point(size=3) + 
+  geom_segment(aes(x=Estimate-StdErr, xend=Estimate+StdErr, y=coef, yend=coef), size=1.3) +
+  geom_text(label=ifelse(co$FDR<0.05,"*",""), size=10, aes(x=Estimate+StdErr+0.025)) +
+  labs(x="Change in movement", y="Coefficient")
+co1 <- dround(co[,c(7,1,2,5,6)])
+row.names(co1) <- NULL
+co1
+```
+
+```{r}
+co2 <- co[,c("Estimate","StdErr")]
+co2$cycle <- ifelse(grepl("Light",row.names(co2)),"Light","Dark")
+co2$Conc2 <- gsub("Concentration","",gsub("Lightdark:","",row.names(co2),fixed=TRUE))
+co2 <- rbind(data.frame(Estimate=c(0,0),StdErr=c(0,0),cycle=c("Light","Dark"),Conc2="CTRL"),co2)
+co2$Conc2 <- factor(co2$Conc2, unique(co2$Conc2))
+ggplot(co2, aes(as.integer(Conc2), Estimate, colour=cycle)) + 
+  geom_hline(yintercept=0, linetype="dashed") + geom_point() +
+  geom_segment(aes(y=Estimate-StdErr,yend=Estimate+StdErr,xend=as.integer(Conc2))) + 
+  geom_smooth(method="loess", span=1, level=0.9) + 
+  scale_x_continuous(breaks=1:6, labels=levels(co2$Conc2)) +
+  labs(x="Concentration", y="Change in movement")
+```
+
+***
+
+```{r child='footer.Rmd'}
+```
+
+
+```{r SaveSession}
+sessionInfo()
+```
+

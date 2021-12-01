@@ -179,3 +179,8 @@ For details on data filtering, normalization, batch correction and differential 
 
 ```{r child='footer.Rmd'}
 ```
+
+```{r SaveSession}
+sessionInfo()
+```
+

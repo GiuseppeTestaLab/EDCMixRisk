@@ -24,6 +24,8 @@
 
 [FunctionalClustering](11_FunctionalClustering.html)
 
+[DoseResponseInVivo](12_DoseResponse_InVivo.html)
+
 ### Authors
 
 Nicolò Caporale: nicolo.caporale@ieo.it, nicolo.caporale@unimi.it

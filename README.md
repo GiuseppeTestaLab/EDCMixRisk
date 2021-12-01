@@ -2,34 +2,15 @@
 
 The code and the data in this repository enables the reproduction of all the analyses and plots for the transcriptomic data in the paper (link doi).
 
-All data are openly available on GEO both in their raw and processed forms [GEO repository](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171566).
+Moreover it allows also scientists without coding experience to interactively explore all the analysis of the paper.
+
+All data are available on GEO 
+[GEO repository](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE171566).
 
 You can start from [here](01_MixN_Acute.html)
 
-Index
+***
 
-[01_MixN_Acute](01_MixN_Acute.html)
+```{r child='footer.Rmd'}
+```
 
-[02_MixG_Acute](02_MixG_Acute.html)
-
-[03_MixN_ChronicFetal](03_MixN_ChronicFetal.html)
-
-[04_FunctionalFetalChronicMixN](04_FunctionalFetalChronicMixN.html)
-
-[05_MixN_ChronicOrganoids](05_MixN_ChronicOrganoids.html)
-
-[06_FunctionalOrganoidChronicMixN](06_FunctionalOrganoidChronicMixN.html)
-
-[07_MixVsSingleCompounds](07_MixVsSingleCompounds.html)
-
-[08_FunctionalSingleCompounds](06_FunctionalSingleCompounds.html)
-
-[09_MasterRegulatorAnalysis](09_MasterRegulatorAnalysis.html)
-
-[10_HormonalPathways](10_HormonalPathways.html)
-
-[11_Immunofluorescence](11_Immunofluorescence.html)
-
-[12_MixN_clustering](12_MixN_clustering.html)
-
-[13_FunctionalClustering](13_FunctionalClustering.html)
