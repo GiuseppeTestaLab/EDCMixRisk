@@ -325,8 +325,16 @@ Genomatix2[as.character(Genomatix$Gene[which(Genomatix$Pathway=="Corticoid")]),"
 
 write.csv(Genomatix2, file = "../../Data/HormonalGenes/Genomatix/genomatixHorizontal.csv")
 ```
+
 ***
 
 ```{r child='footer.Rmd'}
 ```
+
+
+
+```{r SaveSession}
+sessionInfo()
+```
+
 

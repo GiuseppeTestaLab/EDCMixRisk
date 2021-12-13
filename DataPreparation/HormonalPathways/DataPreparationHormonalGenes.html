@@ -410,68 +410,67 @@ div.tocify {
 <span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>Thyroid <span class="ot">&lt;-</span> Thyroid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;TUMOR&quot;</span>,<span class="fu">names</span>(Thyroid))]</span>
 <span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>Thyroid <span class="ot">&lt;-</span> Thyroid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;PARA&quot;</span>,<span class="fu">names</span>(Thyroid))]</span>
 <span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>Thyroid <span class="ot">&lt;-</span> Thyroid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;AUTOIMMUNE&quot;</span>,<span class="fu">names</span>(Thyroid))]</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">#Thyroid &lt;- Thyroid[-grep(&quot;WIKI&quot;,names(Thyroid))]</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>Thyroid <span class="ot">&lt;-</span> Thyroid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Thyroid))]</span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>Thyroid <span class="ot">&lt;-</span> <span class="fu">union</span>(ThyroidHuman, <span class="fu">unlist</span>(Thyroid))</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>Thyroid <span class="ot">&lt;-</span> Thyroid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Thyroid))]</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>Thyroid <span class="ot">&lt;-</span> <span class="fu">union</span>(ThyroidHuman, <span class="fu">unlist</span>(Thyroid))</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>ThyroidDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(Thyroid,degs)</span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(ThyroidDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/ThyroidDEGs.csv&quot;</span>)</span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;ANDROGEN&quot;</span>,<span class="fu">names</span>(gsets))]</span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> Androgen[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;CANCER&quot;</span>,<span class="fu">names</span>(Androgen))]</span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> Androgen[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Androgen))]</span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>Androgen2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Androgen&quot;</span>,Pathways<span class="sc">$</span>Androgen.human.and.mouse)])</span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> <span class="fu">union</span>(Androgen2,(<span class="fu">unlist</span>(Androgen)))</span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>AndrogenDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Androgen))</span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(AndrogenDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/AndrogenDEGs.csv&quot;</span>)</span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>Estrogen <span class="ot">&lt;-</span> gsets[<span class="fu">union</span>(<span class="fu">grep</span>(<span class="st">&quot;ESTROGEN&quot;</span>,<span class="fu">names</span>(gsets)),<span class="fu">grep</span>(<span class="st">&quot;ESTRAD&quot;</span>,<span class="fu">names</span>(gsets)))]</span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>Estrogen <span class="ot">&lt;-</span> Estrogen[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Estrogen))]</span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>Estrogen2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Estrogen&quot;</span>,Pathways<span class="sc">$</span>Estrogen.human.and.mouse.and.rat)])</span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>Estrogen <span class="ot">&lt;-</span> <span class="fu">union</span>(Estrogen2,(<span class="fu">unlist</span>(Estrogen)))</span>
-<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>EstrogenDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Estrogen))</span>
-<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(EstrogenDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/EstrogenDEGs.csv&quot;</span>)</span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;CORTICO&quot;</span>,<span class="fu">names</span>(gsets))]</span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> Corticoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Corticoid))]</span>
-<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> Corticoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;NFK&quot;</span>,<span class="fu">names</span>(Corticoid))]</span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>Corticoid2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Glucocorticoid&quot;</span>,Pathways<span class="sc">$</span>Glucocorticoid.human.and.mouse.and.rat)])</span>
-<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> <span class="fu">union</span>(Corticoid2,(<span class="fu">unlist</span>(Corticoid)))</span>
-<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>CorticoidDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Corticoid))</span>
-<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(CorticoidDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/CorticoidDEGs.csv&quot;</span>)</span>
-<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;PPAR&quot;</span>,<span class="fu">names</span>(gsets))]</span>
-<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> PPAR[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;PAX8&quot;</span>,<span class="fu">names</span>(PPAR))]</span>
-<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> PPAR[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(PPAR))]</span>
-<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>PPAR2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Peroxi&quot;</span>,Pathways<span class="sc">$</span>Peroxisome.proliferator.activated.receptor.human.and.mouse.and.rat)])</span>
-<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> <span class="fu">union</span>(PPAR2,(<span class="fu">unlist</span>(PPAR)))</span>
-<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>PPARDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(PPAR))</span>
-<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(PPARDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/PPARDEGs.csv&quot;</span>)</span>
-<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;PROGESTER&quot;</span>,<span class="fu">names</span>(gsets))]</span>
-<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> Progesterone[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;OOCYTE&quot;</span>,<span class="fu">names</span>(Progesterone))]</span>
-<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> Progesterone[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Progesterone))]</span>
-<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>Progesterone2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Progesterone&quot;</span>,Pathways<span class="sc">$</span>Progesterone.receptor.human.and.mouse)])</span>
-<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> <span class="fu">union</span>(Progesterone2,(<span class="fu">unlist</span>(Progesterone)))</span>
-<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>ProgesteroneDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Progesterone))</span>
-<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(ProgesteroneDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/ProgesteroneDEGs.csv&quot;</span>)</span>
-<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>Retinoic <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;RETINOIC&quot;</span>,<span class="fu">names</span>(gsets))]</span>
-<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>Retinoic <span class="ot">&lt;-</span> Retinoic[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;TFA&quot;</span>,<span class="fu">names</span>(Retinoic))]</span>
-<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>Retinoid <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;RETINOID&quot;</span>,<span class="fu">names</span>(gsets))]</span>
-<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>Retinoid <span class="ot">&lt;-</span> Retinoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;VISION&quot;</span>,<span class="fu">names</span>(Retinoid))]</span>
-<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>Retinoid <span class="ot">&lt;-</span> Retinoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Retinoid))]</span>
-<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>Retinoic<span class="sc">$</span><span class="st">`</span><span class="at">C5:MF:GO_RETINOID_X_RECEPTOR_BINDING</span><span class="st">`</span> <span class="ot">&lt;-</span> Retinoid<span class="sc">$</span><span class="st">`</span><span class="at">C5:MF:GO_RETINOID_X_RECEPTOR_BINDING</span><span class="st">`</span></span>
-<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>Retinoic2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Retinoic&quot;</span>,Pathways<span class="sc">$</span>RA.human.and.mouse)])</span>
-<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>Retinoic <span class="ot">&lt;-</span> <span class="fu">union</span>(Retinoic2,(<span class="fu">unlist</span>(Retinoic)))</span>
-<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>RetinoicDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Retinoic))</span>
-<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(RetinoicDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/RetinoicDEGs.csv&quot;</span>)</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>ThyroidDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(Thyroid,degs)</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(ThyroidDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/ThyroidDEGs.csv&quot;</span>)</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;ANDROGEN&quot;</span>,<span class="fu">names</span>(gsets))]</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> Androgen[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;CANCER&quot;</span>,<span class="fu">names</span>(Androgen))]</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> Androgen[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Androgen))]</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>Androgen2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Androgen&quot;</span>,Pathways<span class="sc">$</span>Androgen.human.and.mouse)])</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>Androgen <span class="ot">&lt;-</span> <span class="fu">union</span>(Androgen2,(<span class="fu">unlist</span>(Androgen)))</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>AndrogenDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Androgen))</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(AndrogenDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/AndrogenDEGs.csv&quot;</span>)</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>Estrogen <span class="ot">&lt;-</span> gsets[<span class="fu">union</span>(<span class="fu">grep</span>(<span class="st">&quot;ESTROGEN&quot;</span>,<span class="fu">names</span>(gsets)),<span class="fu">grep</span>(<span class="st">&quot;ESTRAD&quot;</span>,<span class="fu">names</span>(gsets)))]</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>Estrogen <span class="ot">&lt;-</span> Estrogen[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Estrogen))]</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>Estrogen2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Estrogen&quot;</span>,Pathways<span class="sc">$</span>Estrogen.human.and.mouse.and.rat)])</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>Estrogen <span class="ot">&lt;-</span> <span class="fu">union</span>(Estrogen2,(<span class="fu">unlist</span>(Estrogen)))</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>EstrogenDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Estrogen))</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(EstrogenDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/EstrogenDEGs.csv&quot;</span>)</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;CORTICO&quot;</span>,<span class="fu">names</span>(gsets))]</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> Corticoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Corticoid))]</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> Corticoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;NFK&quot;</span>,<span class="fu">names</span>(Corticoid))]</span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>Corticoid2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Glucocorticoid&quot;</span>,Pathways<span class="sc">$</span>Glucocorticoid.human.and.mouse.and.rat)])</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>Corticoid <span class="ot">&lt;-</span> <span class="fu">union</span>(Corticoid2,(<span class="fu">unlist</span>(Corticoid)))</span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>CorticoidDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Corticoid))</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(CorticoidDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/CorticoidDEGs.csv&quot;</span>)</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;PPAR&quot;</span>,<span class="fu">names</span>(gsets))]</span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> PPAR[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;PAX8&quot;</span>,<span class="fu">names</span>(PPAR))]</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> PPAR[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(PPAR))]</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>PPAR2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Peroxi&quot;</span>,Pathways<span class="sc">$</span>Peroxisome.proliferator.activated.receptor.human.and.mouse.and.rat)])</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>PPAR <span class="ot">&lt;-</span> <span class="fu">union</span>(PPAR2,(<span class="fu">unlist</span>(PPAR)))</span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>PPARDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(PPAR))</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(PPARDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/PPARDEGs.csv&quot;</span>)</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;PROGESTER&quot;</span>,<span class="fu">names</span>(gsets))]</span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> Progesterone[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;OOCYTE&quot;</span>,<span class="fu">names</span>(Progesterone))]</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> Progesterone[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Progesterone))]</span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>Progesterone2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Progesterone&quot;</span>,Pathways<span class="sc">$</span>Progesterone.receptor.human.and.mouse)])</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>Progesterone <span class="ot">&lt;-</span> <span class="fu">union</span>(Progesterone2,(<span class="fu">unlist</span>(Progesterone)))</span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>ProgesteroneDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Progesterone))</span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(ProgesteroneDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/ProgesteroneDEGs.csv&quot;</span>)</span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>Retinoic <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;RETINOIC&quot;</span>,<span class="fu">names</span>(gsets))]</span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>Retinoic <span class="ot">&lt;-</span> Retinoic[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;TFA&quot;</span>,<span class="fu">names</span>(Retinoic))]</span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>Retinoid <span class="ot">&lt;-</span> gsets[<span class="fu">grep</span>(<span class="st">&quot;RETINOID&quot;</span>,<span class="fu">names</span>(gsets))]</span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a>Retinoid <span class="ot">&lt;-</span> Retinoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;VISION&quot;</span>,<span class="fu">names</span>(Retinoid))]</span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>Retinoid <span class="ot">&lt;-</span> Retinoid[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">&quot;HPO&quot;</span>,<span class="fu">names</span>(Retinoid))]</span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>Retinoic<span class="sc">$</span><span class="st">`</span><span class="at">C5:MF:GO_RETINOID_X_RECEPTOR_BINDING</span><span class="st">`</span> <span class="ot">&lt;-</span> Retinoid<span class="sc">$</span><span class="st">`</span><span class="at">C5:MF:GO_RETINOID_X_RECEPTOR_BINDING</span><span class="st">`</span></span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a>Retinoic2 <span class="ot">&lt;-</span> <span class="fu">as.character</span>(Pathways<span class="sc">$</span>Gene[<span class="fu">grep</span>(<span class="st">&quot;Retinoic&quot;</span>,Pathways<span class="sc">$</span>RA.human.and.mouse)])</span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>Retinoic <span class="ot">&lt;-</span> <span class="fu">union</span>(Retinoic2,(<span class="fu">unlist</span>(Retinoic)))</span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>RetinoicDEGs <span class="ot">&lt;-</span> <span class="fu">intersect</span>(degs, <span class="fu">unlist</span>(Retinoic))</span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(RetinoicDEGs,<span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/RetinoicDEGs.csv&quot;</span>)</span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(ThyroidDEGs,AndrogenDEGs,EstrogenDEGs,CorticoidDEGs,ProgesteroneDEGs,PPARDEGs, RetinoicDEGs, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData&quot;</span>)</span>
-<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(Thyroid,Androgen,Estrogen,Corticoid,Progesterone, PPAR, Retinoic, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalGenes.RData&quot;</span>)</span></code></pre></div>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(ThyroidDEGs,AndrogenDEGs,EstrogenDEGs,CorticoidDEGs,ProgesteroneDEGs,PPARDEGs, RetinoicDEGs, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalDEGs/HormonalDEGs.RData&quot;</span>)</span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a><span class="fu">save</span>(Thyroid,Androgen,Estrogen,Corticoid,Progesterone, PPAR, Retinoic, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/HormonalGenes.RData&quot;</span>)</span></code></pre></div>
 </div>
 <div id="hormonal-genes-psychencode" class="section level3">
 <h3>Hormonal Genes Psychencode</h3>
@@ -736,12 +735,12 @@ div.tocify {
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>NodeSize<span class="sc">$</span>Gene <span class="ot">&lt;-</span> <span class="fu">rownames</span>(NodeSize)</span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>Genomatix <span class="ot">&lt;-</span> <span class="fu">merge</span>(Hormon, NodeSize,<span class="at">by=</span><span class="st">&quot;Gene&quot;</span>)</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(Genomatix<span class="sc">$</span>Gene))</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 337</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 333</span></span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(Genomatix, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/Genomatix/genomatix.csv&quot;</span>)</span>
 <span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>Genomatix <span class="ot">&lt;-</span> Genomatix[<span class="fu">which</span>((Genomatix<span class="sc">$</span>Function<span class="sc">==</span><span class="st">&quot;DEG&quot;</span><span class="sc">&amp;</span>Genomatix<span class="sc">$</span>FDR<span class="sc">&lt;</span><span class="fl">0.05</span>)<span class="sc">|</span>(Genomatix<span class="sc">$</span>Function<span class="sc">!=</span><span class="st">&quot;DEG&quot;</span><span class="sc">&amp;</span>Genomatix<span class="sc">$</span>FDR<span class="sc">&lt;</span><span class="fl">0.05</span>)),]</span>
 <span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(Genomatix<span class="sc">$</span>Gene))</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 263</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 259</span></span>
 <span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(Genomatix, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/Genomatix/genomatixFiltered.csv&quot;</span>)</span></code></pre></div>
 </div>
 <div id="filtering-for-ndd-genes" class="section level3">
@@ -751,20 +750,14 @@ div.tocify {
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="do">##   ASD</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="do">##   SFARI</span></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="do">##   SFARIgenes</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   AutismKB</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   DecipherNeuro</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   MSSNG</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="do">##   ASDsevere</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="do">##   ID</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="do">##   NeuroOmim</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="do">##   iPSYCH</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="do">##   GDI</span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>ASD<span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">unlist</span>(ASD))</span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>Genomatix<span class="sc">$</span>NDD <span class="ot">&lt;-</span> <span class="st">&quot;NO&quot;</span></span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>Genomatix<span class="sc">$</span>NDD[<span class="fu">which</span>(Genomatix<span class="sc">$</span>Gene <span class="sc">%in%</span> ASD)] <span class="ot">&lt;-</span> <span class="st">&quot;YES&quot;</span></span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(Genomatix<span class="sc">$</span>Gene))</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 263</span></span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(Genomatix, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/Genomatix/genomatixNDD.csv&quot;</span>)</span></code></pre></div>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="do">##   NeuropsychiatricDiseases</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="do">##   PsychencodeNDD</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>ASD<span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">unlist</span>(ASD))</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>Genomatix<span class="sc">$</span>NDD <span class="ot">&lt;-</span> <span class="st">&quot;NO&quot;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>Genomatix<span class="sc">$</span>NDD[<span class="fu">which</span>(Genomatix<span class="sc">$</span>Gene <span class="sc">%in%</span> ASD)] <span class="ot">&lt;-</span> <span class="st">&quot;YES&quot;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(<span class="fu">unique</span>(Genomatix<span class="sc">$</span>Gene))</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="do">## [1] 259</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(Genomatix, <span class="at">file =</span> <span class="st">&quot;../../Data/HormonalGenes/Genomatix/genomatixNDD.csv&quot;</span>)</span></code></pre></div>
 </div>
 <div id="reshaping-the-table" class="section level3">
 <h3>Reshaping the table</h3>
@@ -792,19 +785,18 @@ div.tocify {
 </div>
 <div id="index" class="section level3">
 <h3>Index</h3>
-<p><a href="01_MixN_Acute.html">01_MixN_Acute</a></p>
-<p><a href="02_MixG_Acute.html">02_MixG_Acute</a></p>
-<p><a href="03_MixN_ChronicFetal.html">03_MixN_ChronicFetal</a></p>
-<p><a href="04_FunctionalFetalChronicMixN.html">04_FunctionalFetalChronicMixN</a></p>
-<p><a href="05_MixN_ChronicOrganoids.html">05_MixN_ChronicOrganoids</a></p>
-<p><a href="06_FunctionalOrganoidChronicMixN.html">06_FunctionalOrganoidChronicMixN</a></p>
-<p><a href="07_MixVsSingleCompounds.html">07_MixVsSingleCompounds</a></p>
-<p><a href="06_FunctionalSingleCompounds.html">08_FunctionalSingleCompounds</a></p>
-<p><a href="09_MasterRegulatorAnalysis.html">09_MasterRegulatorAnalysis</a></p>
-<p><a href="10_HormonalPathways.html">10_HormonalPathways</a></p>
-<p><a href="11_Immunofluorescence.html">11_Immunofluorescence</a></p>
-<p><a href="12_MixN_clustering.html">12_MixN_clustering</a></p>
-<p><a href="13_FunctionalClustering.html">13_FunctionalClustering</a></p>
+<p><a href="../../01_MixN_Acute.html">MixN_Acute</a></p>
+<p><a href="../../02_MixN_ChronicFetal.html">MixN_ChronicFetal</a></p>
+<p><a href="../../03_FunctionalFetalChronicMixN.html">FunctionalFetalChronicMixN</a></p>
+<p><a href="../../04_MixN_ChronicOrganoids.html">MixN_ChronicOrganoids</a></p>
+<p><a href="../../05_FunctionalOrganoidChronicMixN.html">FunctionalOrganoidChronicMixN</a></p>
+<p><a href="../../06_MixVsSingleCompounds.html">MixNVsSingleCompounds</a></p>
+<p><a href="../../07_MasterRegulatorAnalysis.html">MasterRegulatorAnalysis</a></p>
+<p><a href="../../08_HormonalPathways.html">HormonalPathways</a></p>
+<p><a href="../../09_Immunofluorescence.html">Immunofluorescence</a></p>
+<p><a href="../../10_MixN_clustering.html">MixN_clustering</a></p>
+<p><a href="../../11_FunctionalClustering.html">FunctionalClustering</a></p>
+<p><a href="../../12_DoseResponse_InVivo.html">DoseResponseInVivo</a></p>
 </div>
 <div id="authors" class="section level3">
 <h3>Authors</h3>
@@ -813,7 +805,73 @@ div.tocify {
 <p>Pierre-Luc Germain: <a href="mailto:pierre-luc.germain@ieo.it" class="email">pierre-luc.germain@ieo.it</a></p>
 <p>Giuseppe Testa: <a href="mailto:giuseppe.testa@ieo.it" class="email">giuseppe.testa@ieo.it</a></p>
 <p>Lab: <a href="http://www.testalab.eu/" class="uri">http://www.testalab.eu/</a></p>
-<p>‘Date: February 19, 2021’</p>
+<p>‘Date: December 13, 2021’</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div>
+<pre><code>## R version 4.0.3 (2020-10-10)
+## Platform: x86_64-apple-darwin17.0 (64-bit)
+## Running under: macOS Big Sur 10.16
+## 
+## Matrix products: default
+## BLAS:   /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRblas.dylib
+## LAPACK: /Library/Frameworks/R.framework/Versions/4.0/Resources/lib/libRlapack.dylib
+## 
+## locale:
+## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+## 
+## attached base packages:
+## [1] parallel  stats4    stats     graphics  grDevices utils     datasets 
+## [8] methods   base     
+## 
+## other attached packages:
+##  [1] biomaRt_2.46.3              SEtools_1.4.0              
+##  [3] readxl_1.3.1                msigdbr_7.2.1              
+##  [5] sva_3.38.0                  BiocParallel_1.24.1        
+##  [7] genefilter_1.72.1           mgcv_1.8-34                
+##  [9] nlme_3.1-152                dplyr_1.0.5                
+## [11] plotly_4.9.3                ggplot2_3.3.3              
+## [13] pheatmap_1.0.12             DT_0.17                    
+## [15] edgeR_3.32.1                limma_3.46.0               
+## [17] SummarizedExperiment_1.20.0 Biobase_2.50.0             
+## [19] GenomicRanges_1.42.0        GenomeInfoDb_1.26.2        
+## [21] IRanges_2.24.1              S4Vectors_0.28.1           
+## [23] BiocGenerics_0.36.0         MatrixGenerics_1.2.1       
+## [25] matrixStats_0.58.0         
+## 
+## loaded via a namespace (and not attached):
+##   [1] Rtsne_0.15             colorspace_2.0-0       rjson_0.2.20          
+##   [4] ellipsis_0.3.1         circlize_0.4.12        XVector_0.30.0        
+##   [7] GlobalOptions_0.1.2    clue_0.3-58            bit64_4.0.5           
+##  [10] AnnotationDbi_1.52.0   fansi_0.4.2            xml2_1.3.2            
+##  [13] codetools_0.2-18       splines_4.0.3          cachem_1.0.4          
+##  [16] knitr_1.31             jsonlite_1.7.2         Cairo_1.5-12.2        
+##  [19] annotate_1.68.0        dbplyr_2.1.0           cluster_2.1.1         
+##  [22] png_0.1-7              compiler_4.0.3         httr_1.4.2            
+##  [25] assertthat_0.2.1       Matrix_1.3-2           fastmap_1.1.0         
+##  [28] lazyeval_0.2.2         prettyunits_1.1.1      htmltools_0.5.1.1     
+##  [31] tools_4.0.3            gtable_0.3.0           glue_1.4.2            
+##  [34] GenomeInfoDbData_1.2.4 rappdirs_0.3.3         V8_3.4.0              
+##  [37] Rcpp_1.0.6             cellranger_1.1.0       jquerylib_0.1.3       
+##  [40] vctrs_0.3.7            iterators_1.0.13       xfun_0.21             
+##  [43] stringr_1.4.0          openxlsx_4.2.3         lifecycle_1.0.0       
+##  [46] XML_3.99-0.5           zlibbioc_1.36.0        scales_1.1.1          
+##  [49] TSP_1.1-10             hms_1.0.0              RColorBrewer_1.1-2    
+##  [52] ComplexHeatmap_2.6.2   yaml_2.2.1             curl_4.3              
+##  [55] memoise_2.0.0          sass_0.3.1             stringi_1.5.3         
+##  [58] RSQLite_2.2.3          randomcoloR_1.1.0.1    foreach_1.5.1         
+##  [61] seriation_1.2-9        zip_2.1.1              shape_1.4.5           
+##  [64] rlang_0.4.10           pkgconfig_2.0.3        bitops_1.0-6          
+##  [67] evaluate_0.14          lattice_0.20-41        purrr_0.3.4           
+##  [70] htmlwidgets_1.5.3      bit_4.0.4              tidyselect_1.1.0      
+##  [73] magrittr_2.0.1         R6_2.5.0               generics_0.1.0        
+##  [76] DelayedArray_0.16.1    DBI_1.1.1              pillar_1.5.1          
+##  [79] withr_2.4.1            survival_3.2-7         RCurl_1.98-1.2        
+##  [82] tibble_3.1.0           crayon_1.4.1           utf8_1.2.1            
+##  [85] BiocFileCache_1.14.0   rmarkdown_2.7          progress_1.2.2        
+##  [88] GetoptLong_1.0.5       locfit_1.5-9.4         grid_4.0.3            
+##  [91] data.table_1.14.0      blob_1.2.1             digest_0.6.27         
+##  [94] xtable_1.8-4           tidyr_1.1.3            openssl_1.4.3         
+##  [97] munsell_0.5.0          registry_0.5-1         viridisLite_0.3.0     
+## [100] bslib_0.2.4            askpass_1.1</code></pre>
 </div>
 
 

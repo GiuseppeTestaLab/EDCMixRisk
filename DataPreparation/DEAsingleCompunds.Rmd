@@ -74,7 +74,7 @@ degs.orgT3 <- row.names(res.orgT3)[which(abs(res.orgT3$logFC)> 0.5 & res.orgT3$F
 res.orgBPA <- as.data.frame(topTags(glmQLFTest(fit,c("EXPOBPA0.04X")),n=Inf))
 degs.orgBPA <- row.names(res.orgBPA)[which(abs(res.orgBPA$logFC)> 0.5 & res.orgBPA$FDR<=0.05 & res.orgBPA$logCPM>0)]
 
-save(res.orgT3,res.orgBPA, file = "../Data/DEAorgSingleCompunds.RData")
+#save(res.orgT3,res.orgBPA, file = "../Data/DEAorgSingleCompunds.RData")
 ```
 
 
@@ -100,7 +100,7 @@ degs.fetT3 <- row.names(res.fetT3)[which(abs(res.fetT3$logFC)> 0.5 & res.fetT3$F
 res.fetBPA <- as.data.frame(topTags(glmQLFTest(fit,c("EXPOBPA0.04X")),n=Inf))
 degs.fetBPA <- row.names(res.fetBPA)[which(abs(res.fetBPA$logFC)> 0.5 & res.fetBPA$FDR<=0.05 & res.fetBPA$logCPM>0)]
 
-save(res.fetT3,res.fetBPA, file = "../Data/DEAfetSingleCompunds.RData")
+#save(res.fetT3,res.fetBPA, file = "../Data/DEAfetSingleCompunds.RData")
 ```
 
 
@@ -110,3 +110,10 @@ save(res.fetT3,res.fetBPA, file = "../Data/DEAfetSingleCompunds.RData")
 
 ```{r child='footer.Rmd'}
 ```
+
+
+
+```{r SaveSession}
+sessionInfo()
+```
+

@@ -119,10 +119,18 @@ res.fe2 <- as.data.frame(topTags(glmQLFTest(fit,c("EXPO0.1X","EXPO1X","EXPO10X",
 SEs <- list(chronic.org=org, chronic.fetal=fe, acute.fetal=se2.fe)
 DEAs <- list(chronic.org=res.org, chronic.fetal=res.fe, acute.fetal=res.fe2)
 
-save(SEs, DEAs, file = "../Data/AllSEcorrected.RData")
+#save(SEs, DEAs, file = "../Data/AllSEcorrected.RData")
 ```
 
 ***
 
 ```{r child='footer.Rmd'}
 ```
+
+
+
+```{r SaveSession}
+sessionInfo()
+```
+
+
